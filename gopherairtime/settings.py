@@ -147,8 +147,9 @@ INSTALLED_APPS = (
     'debug_toolbar',
 
     # sample apps to explain usage
-    'app1',
+    'hotsocket',
     'celery_app',
+    'tastypie',
 )
 
 # A sample logging configuration. The only tangible logging
