@@ -16,4 +16,4 @@ django-celery-email
 pep8
 pyflakes
 fabric
-django-tastypie
+django-tastypie<0.10.0
