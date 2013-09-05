@@ -10,7 +10,8 @@ class RechargeResource(ModelResource):
     """
     class Meta:
         resource_name = "hotsocket/recharge"
-        list_allowed_methods = ["post", "get"]
+        list_allowed_methods = ["put", "get", "post", "patch"]
+        detail_allowed_methods = ["put"]
         authorization = Authorization()
         include_resource_uri = True
         always_return_data = True
