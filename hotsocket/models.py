@@ -17,7 +17,7 @@ class Recharge(models.Model):
     status_confirmed_at = models.DateTimeField(null=True)
 
     def __unicode__(self):
-        return "%s" % self.msisdn_recharge
+        return "%s" % self.msisdn
 
     class Meta:
         verbose_name = "Recharge"
