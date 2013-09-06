@@ -4,7 +4,7 @@ import os
 import djcelery
 
 
-djcelery.setup_loader()
+# djcelery.setup_loader()
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -26,8 +26,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'gopher',
-        'USER': '',
-        'PASSWORD': '',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -151,6 +151,8 @@ INSTALLED_APPS = (
     'hotsocket',
     'celery_app',
     'tastypie',
+    'celerytasks',
+    'kombu.transport.django'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -182,22 +184,22 @@ LOGGING = {
     }
 }
 
-# Celery configuration options
-BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# # Celery configuration options
+# BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-# Uncomment if you're running in DEBUG mode and you want to skip the broker
-# and execute tasks immediate instead of deferring them to the queue / workers.
-# CELERY_ALWAYS_EAGER = DEBUG
+# # Uncomment if you're running in DEBUG mode and you want to skip the broker
+# # and execute tasks immediate instead of deferring them to the queue / workers.
+# # CELERY_ALWAYS_EAGER = DEBUG
 
-# Tell Celery where to find the tasks
-CELERY_IMPORTS = ('celery_app.tasks',)
+# # Tell Celery where to find the tasks
+# CELERY_IMPORTS = ('celery_app.tasks',)
 
-# Defer email sending to Celery, except if we're in debug mode,
-# then just print the emails to stdout for debugging.
-EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# # Defer email sending to Celery, except if we're in debug mode,
+# # then just print the emails to stdout for debugging.
+# EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Django debug toolbar
 DEBUG_TOOLBAR_CONFIG = {
@@ -218,4 +220,24 @@ SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
     # 'dsn': 'http://public:secret@example.com/1',
+}
+
+djcelery.setup_loader()
+BROKER_URL = "django://"
+
+from datetime import timedelta
+
+CELERY_RESULT_BACKEND = "database"
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+CELERYBEAT_SCHEDULE = {
+    # 'add-every-60-seconds': {
+    #     'task': 'celerytasks.tasks.hotsocket_login',
+    #     'schedule': timedelta(seconds=5),
+    # },
+
+    'check-status-60-seconds': {
+        'task': 'celerytasks.tasks.recharge_msisdn',
+        'schedule': timedelta(seconds=5),
+    },
 }
