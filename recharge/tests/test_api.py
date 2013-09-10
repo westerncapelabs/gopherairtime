@@ -11,13 +11,13 @@ class TestRechargeResource(ResourceTestCase):
         Testing the basic url is configured
         """
         url = reverse('api_dispatch_list',
-                      kwargs={'resource_name': 'recharge/recharge',
+                      kwargs={'resource_name': 'recharge',
                       'api_name': 'v1'})
-        self.assertEqual(url, "/api/v1/recharge/recharge/")
+        self.assertEqual(url, "/api/v1/recharge/")
 
     def test_single_post_url(self):
         url_recharge = reverse('api_dispatch_list',
-                               kwargs={'resource_name': 'recharge/recharge',
+                               kwargs={'resource_name': 'recharge',
                                'api_name': 'v1'})
 
         response = self.api_client.post(url_recharge,
@@ -37,7 +37,7 @@ class TestRechargeResource(ResourceTestCase):
 
     def test_multiple_posts(self):
         url_recharge = reverse('api_dispatch_list',
-                               kwargs={'resource_name': 'recharge/recharge',
+                               kwargs={'resource_name': 'recharge',
                                'api_name': 'v1'})
 
         data = {

@@ -31,7 +31,7 @@ class RechargeResource(ModelResource):
                 }
     """
     class Meta:
-        resource_name = "recharge/recharge"
+        resource_name = "recharge"
         list_allowed_methods = ["put", "get", "post", "patch"]
         detail_allowed_methods = ["put"]
         authorization = Authorization()
