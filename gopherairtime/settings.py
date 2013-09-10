@@ -26,8 +26,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'gopher',
-        'USER': '',
-        'PASSWORD': '',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -148,7 +148,7 @@ INSTALLED_APPS = (
     'debug_toolbar',
 
     # sample apps to explain usage
-    'hotsocket',
+    'recharge',
     'celery_app',
     'tastypie',
 )

@@ -1,6 +1,6 @@
 from tastypie.resources import ModelResource
 from tastypie.authorization import Authorization
-from hotsocket.models import Recharge
+from recharge.models import Recharge
 
 
 class RechargeResource(ModelResource):
@@ -10,20 +10,20 @@ class RechargeResource(ModelResource):
 
     multiple uploads:
     url:
-        - /api/v1/hotsocket/recharge/
+        - /api/v1/recharge/recharge/
         - PATCH (Only use it for multiple post)
     data =
     {
                     "objects": [
                         {
                             "denomination": 10,
-                            "product_code": "AIRTIME",
+                            "product_code": "recharge",
                             "notes": "Grassroots Random Winner",
                             "msisdn": 27821231231
                         },
                         {
                             "denomination": 50,
-                            "product_code": "AIRTIME",
+                            "product_code": "recharge",
                             "notes": "Grassroots Random Winner 2",
                             "msisdn": 27821231232
                         }
@@ -31,7 +31,7 @@ class RechargeResource(ModelResource):
                 }
     """
     class Meta:
-        resource_name = "hotsocket/recharge"
+        resource_name = "recharge/recharge"
         list_allowed_methods = ["put", "get", "post", "patch"]
         detail_allowed_methods = ["put"]
         authorization = Authorization()

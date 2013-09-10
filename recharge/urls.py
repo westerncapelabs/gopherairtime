@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url, include
-from hotsocket.api import RechargeResource
+from recharge.api import RechargeResource
 from tastypie.api import Api
 
 
