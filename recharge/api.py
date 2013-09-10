@@ -10,7 +10,7 @@ class RechargeResource(ModelResource):
 
     multiple uploads:
     url:
-        - /api/v1/recharge/recharge/
+        - /api/v1/recharge/
         - PATCH (Only use it for multiple post)
     data =
     {
