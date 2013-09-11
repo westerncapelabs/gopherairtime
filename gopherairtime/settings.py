@@ -235,10 +235,10 @@ CELERY_RESULT_BACKEND = "database"
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
 CELERYBEAT_SCHEDULE = {
-    # 'add-every-60-seconds': {
-    #     'task': 'celerytasks.tasks.hotsocket_login',
-    #     'schedule': timedelta(seconds=5),
-    # },
+    'login-every-115-minutes': {
+        'task': 'celerytasks.tasks.hotsocket_login',
+        'schedule': timedelta(seconds=5),
+    },
 
     'run-queries-60-seconds': {
         'task': 'celerytasks.tasks.run_queries',
