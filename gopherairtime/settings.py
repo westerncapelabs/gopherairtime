@@ -241,3 +241,5 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=5),
     },
 }
+
+from api_settings import *
