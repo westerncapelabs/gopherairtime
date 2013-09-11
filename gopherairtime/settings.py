@@ -208,7 +208,11 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 # South configuration variables
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+import test_runner
+# Using custome test runner
+TEST_RUNNER = "gopherairtime.test_runner.MyRunner"
+
 SKIP_SOUTH_TESTS = True     # Do not run the south tests as part of our
                             # test suite.
 SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
@@ -236,8 +240,8 @@ CELERYBEAT_SCHEDULE = {
     #     'schedule': timedelta(seconds=5),
     # },
 
-    'check-status-60-seconds': {
-        'task': 'celerytasks.tasks.recharge_msisdn',
+    'run-queries-60-seconds': {
+        'task': 'celerytasks.tasks.run_queries',
         'schedule': timedelta(seconds=5),
     },
 }
