@@ -12,7 +12,7 @@ class Recharge(models.Model):
     reference = models.BigIntegerField(unique=True, null=True)
     notes = models.CharField(max_length=100, verbose_name=u'Notes', null=True)
     status = models.CharField(max_length=20)
-    hot_socket_ref = models.BigIntegerField(null=True)
+    recharge_system_ref = models.BigIntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status_confirmed_at = models.DateTimeField(null=True)
 
@@ -29,9 +29,15 @@ class RechargeError(models.Model):
     For admin to analyse trends
     """
     recharge_error = models.ForeignKey(Recharge,
-                                       verbose_name=u'Msisdn Errored',
+                                       verbose_name="MSISDN Error",
                                        related_name='recharge_error')
     error_id = models.IntegerField()
     error_message = models.CharField(max_length=255)
     tries = models.IntegerField()  # Number of times recharge attempted
     last_attempt_at = models.DateTimeField(null=True)
+
+    def __unicode__(self):
+        return "%s" % self.recharge_error
+
+    class Meta:
+        verbose_name = "Recharge Error"

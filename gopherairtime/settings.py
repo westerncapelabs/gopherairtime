@@ -148,7 +148,7 @@ INSTALLED_APPS = (
     'debug_toolbar',
 
     # sample apps to explain usage
-    'hotsocket',
+    'recharge',
     'celery_app',
     'tastypie',
     'celerytasks',
