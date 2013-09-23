@@ -79,7 +79,10 @@ def recharge_query():
 					"network_code": "VOD",
 					"reference": reference,
 					"as_json": True}
+			query.status = -1
+			query.save()
 			get_recharge.delay(data, query.id)
+
 	except StoreToken.DoesNotExist, exc:
 		hotsocket_login.delay()
 		recharge_query.retry(countdown=20, exc=exc)
@@ -117,6 +120,7 @@ def get_recharge(data, query_id):
 		headers = {'content-type': 'application/json'}
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
+
 		try:
 			response = requests.post(url, data=data)
 			json_response = response.json()
@@ -126,6 +130,7 @@ def get_recharge(data, query_id):
 				query.reference = data["reference"]
 				query.recharge_system_ref = json_response["response"]["hotsocket_ref"]
 				query.status = CHECK_STATUS["PENDING"]["code"]
+				query.status_confirmed_at = timezone.now()
 				query.save()
 
 			elif status == code["REF_DUPLICATE"]["status"]:
@@ -169,7 +174,6 @@ def get_recharge(data, query_id):
 
 		except (MSISDNNonNumericError, MSISDMalFormedError, BadProductCodeError,
 		        BadNetworkCodeError, BadCombinationError), exc:
-			print json_response
 			error = RechargeError(error_id=status,
 			                      error_message=message,
 			                      last_attempt_at=timezone.now(),
@@ -179,6 +183,7 @@ def get_recharge(data, query_id):
 
 			update_recharge = Recharge.objects.get(id=query_id)
 			update_recharge.status = CHECK_STATUS["PRE_SUB_ERROR"]["code"]
+			update_recharge.status_confirmed_at = timezone.now()
 			update_recharge.save()
 
 
@@ -199,8 +204,13 @@ def check_recharge_status(data, query_id):
 			if str(status) == str(code["SUCCESS"]["status"]):
 				query.status = int(recharge_status_code)
 				query.status_confirmed_at = timezone.now()
-				print "the status code %s for saving" % query.status
 				query.save()
+
+			elif status == code["TOKEN_EXPIRE"]["status"]:
+				raise TokenExpireError(message)
+
+			elif status == code["TOKEN_INVALID"]["status"]:
+				raise TokenInvalidError(message)
 
 			if int(recharge_status_code) == CHECK_STATUS["FAILED"]["code"]:
 				failure = RechargeFailed(recharge_failed=query,
@@ -208,5 +218,23 @@ def check_recharge_status(data, query_id):
 				                         failure_message=message
 				                         )
 				failure.save()
-		except:
-			pass
+
+		except (TokenInvalidError, TokenExpireError), exc:
+			if hotsocket_login.delay().ready():
+				store_token = StoreToken.objects.get(id=1)
+				data["token"] = store_token.token
+				check_recharge_status.retry(args=[data, query_id], exc=exc)
+
+		except Exception as e:
+			error = RechargeError(error_id=status,
+			                      error_message=message,
+			                      last_attempt_at=timezone.now(),
+			                      recharge_error=query,
+			                      tries=1)
+			error.save()
+
+			update_recharge = Recharge.objects.get(id=query_id)
+			update_recharge.status = CHECK_STATUS["PRE_SUB_ERROR"]["code"]
+			update_recharge.status_confirmed_at = timezone.now()
+			update_recharge.save()
+
