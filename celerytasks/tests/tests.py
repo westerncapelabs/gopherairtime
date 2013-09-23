@@ -28,7 +28,7 @@ class TestRecharge(TestCase):
     def test_query_function(self):
         run_queries.delay()
         query = Recharge.objects.all()
-        [self.assertEqual(obj.status, settings.HOTSOCKET_CODES["SUCCESS"]["status"]) for obj in query]
+        [self.assertEqual(obj.status, settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"]) for obj in query]
         [self.assertIsNotNone(obj.reference) for obj in query]
         [self.assertIsNotNone(obj.recharge_system_ref) for obj in query]
 
@@ -53,7 +53,7 @@ class TestRecharge(TestCase):
         query = Recharge.objects.get(msisdn=27821231232)
         self.assertIsNotNone(query.reference)
         self.assertIsNotNone(query.recharge_system_ref)
-        self.assertEqual(settings.HOTSOCKET_CODES["SUCCESS"]["status"], query.status)
+        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query.status)
 
     def test_invalid_token(self):
         code = settings.HOTSOCKET_CODES
@@ -73,7 +73,7 @@ class TestRecharge(TestCase):
         query = Recharge.objects.get(msisdn=27821231232)
         self.assertIsNotNone(query.reference)
         self.assertIsNotNone(query.recharge_system_ref)
-        self.assertEqual(settings.HOTSOCKET_CODES["SUCCESS"]["status"], query.status)
+        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query.status)
 
     def test_duplicate_reference(self):
         code = settings.HOTSOCKET_CODES
@@ -95,7 +95,7 @@ class TestRecharge(TestCase):
         query_1 = Recharge.objects.get(msisdn=27821231232)
         self.assertIsNotNone(query_1.reference)
         self.assertIsNotNone(query_1.recharge_system_ref)
-        self.assertEqual(settings.HOTSOCKET_CODES["SUCCESS"]["status"], query_1.status)
+        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query_1.status)
 
         query_3 = Recharge.objects.get(msisdn=27821231231)
         self.assertIsNone(query_3.reference)
@@ -113,7 +113,7 @@ class TestRecharge(TestCase):
         query_3 = Recharge.objects.get(msisdn=27821231231)
         self.assertIsNotNone(query_3.reference)
         self.assertIsNotNone(query_3.recharge_system_ref)
-        self.assertEqual(settings.HOTSOCKET_CODES["SUCCESS"]["status"], query_3.status)
+        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query_3.status)
 
     def test_non_numeric_reference(self):
         code = settings.HOTSOCKET_CODES
@@ -135,7 +135,7 @@ class TestRecharge(TestCase):
         query_1 = Recharge.objects.get(msisdn=27821231232)
         self.assertIsNotNone(query_1.reference)
         self.assertIsNotNone(query_1.recharge_system_ref)
-        self.assertEqual(settings.HOTSOCKET_CODES["SUCCESS"]["status"], query_1.status)
+        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query_1.status)
 
     def test_non_numeric_msisdn(self):
         code = settings.HOTSOCKET_CODES
