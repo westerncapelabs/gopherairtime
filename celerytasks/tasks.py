@@ -14,6 +14,9 @@ from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
                                              NonNumericReferenceError)
+from BeautifulSoup import BeautifulSoup
+import mechanize
+import re
 
 logger = get_task_logger(__name__)
 CHECK_STATUS = settings.HS_RECHARGE_STATUS_CODES
@@ -76,8 +79,8 @@ def recharge_query():
 					"recipient_msisdn": query.msisdn,
 					"product_code": query.product_code,
 					"denomination": query.denomination,  # In cents
-					"network_code": "VOD",
-					"reference": reference,
+					"network_code": query_network(query.msisdn),
+					"reference": query.reference,
 					"as_json": True}
 			query.status = -1
 			query.save()
@@ -160,12 +163,6 @@ def get_recharge(data, query_id):
 			elif status == code["COMBO_BAD"]["status"]:
 				raise BadCombinationError(message)
 
-
-		except (DuplicateReferenceError, NonNumericReferenceError), exc:
-			new_reference = random.randint(0, 999999999999999)
-			data["reference"] = new_reference
-			get_recharge.retry(args=[data, query_id], exc=exc)
-
 		except (TokenInvalidError, TokenExpireError), exc:
 			if hotsocket_login.delay().ready():
 				store_token = StoreToken.objects.get(id=1)
@@ -173,7 +170,7 @@ def get_recharge(data, query_id):
 				get_recharge.retry(args=[data, query_id], exc=exc)
 
 		except (MSISDNNonNumericError, MSISDMalFormedError, BadProductCodeError,
-		        BadNetworkCodeError, BadCombinationError), exc:
+		        BadNetworkCodeError, BadCombinationError, DuplicateReferenceError, NonNumericReferenceError), exc:
 			error = RechargeError(error_id=status,
 			                      error_message=message,
 			                      last_attempt_at=timezone.now(),
@@ -238,3 +235,35 @@ def check_recharge_status(data, query_id):
 			update_recharge.status_confirmed_at = timezone.now()
 			update_recharge.save()
 
+
+def query_network(msisdn):
+    mapping = (
+        ('2783', 'MTN'),
+        ('2773', 'MTN'),
+        ('2778', 'MTN'),
+        ('27710', 'MTN'),
+        ('27717', 'MTN'),
+        ('27718', 'MTN'),
+        ('27719', 'MTN'),
+        ('2782', 'VOD'),
+        ('2772', 'VOD'),
+        ('2776', 'VOD'),
+        ('2779', 'VOD'),
+        ('27711', 'VOD'),
+        ('27712', 'VOD'),
+        ('27713', 'VOD'),
+        ('27714', 'VOD'),
+        ('27715', 'VOD'),
+        ('27716', 'VOD'),
+        ('2784', 'CELLC'),
+        ('2774', 'CELLC'),
+        ('27811', '8TA'),
+        ('27812', '8TA'),
+        ('27813', '8TA'),
+        ('27814', '8TA'),
+        )
+
+    for prefix, op in mapping:
+        if str(msisdn).startswith(prefix):
+            return op
+    return None
