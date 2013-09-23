@@ -1,10 +1,10 @@
-# Django settings for skeleton project.
+# Django settings for gopherairtime project.
 
 import os
 import djcelery
 
 
-djcelery.setup_loader()
+# djcelery.setup_loader()
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,13 +25,14 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'skeleton',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'NAME': 'gopher',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -115,10 +116,10 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'skeleton.urls'
+ROOT_URLCONF = 'gopherairtime.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'skeleton.wsgi.application'
+WSGI_APPLICATION = 'gopherairtime.wsgi.application'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -147,8 +148,11 @@ INSTALLED_APPS = (
     'debug_toolbar',
 
     # sample apps to explain usage
-    'app1',
+    'recharge',
     'celery_app',
+    'tastypie',
+    'celerytasks',
+    'kombu.transport.django'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -180,22 +184,22 @@ LOGGING = {
     }
 }
 
-# Celery configuration options
-BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# # Celery configuration options
+# BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-# Uncomment if you're running in DEBUG mode and you want to skip the broker
-# and execute tasks immediate instead of deferring them to the queue / workers.
-# CELERY_ALWAYS_EAGER = DEBUG
+# # Uncomment if you're running in DEBUG mode and you want to skip the broker
+# # and execute tasks immediate instead of deferring them to the queue / workers.
+# # CELERY_ALWAYS_EAGER = DEBUG
 
-# Tell Celery where to find the tasks
-CELERY_IMPORTS = ('celery_app.tasks',)
+# # Tell Celery where to find the tasks
+# CELERY_IMPORTS = ('celery_app.tasks',)
 
-# Defer email sending to Celery, except if we're in debug mode,
-# then just print the emails to stdout for debugging.
-EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# # Defer email sending to Celery, except if we're in debug mode,
+# # then just print the emails to stdout for debugging.
+# EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Django debug toolbar
 DEBUG_TOOLBAR_CONFIG = {
@@ -204,7 +208,11 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 # South configuration variables
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+import test_runner
+# Using custome test runner
+TEST_RUNNER = "gopherairtime.test_runner.MyRunner"
+
 SKIP_SOUTH_TESTS = True     # Do not run the south tests as part of our
                             # test suite.
 SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
@@ -217,3 +225,25 @@ RAVEN_CONFIG = {
     # DevOps will supply you with this.
     # 'dsn': 'http://public:secret@example.com/1',
 }
+
+djcelery.setup_loader()
+BROKER_URL = "django://"
+
+from datetime import timedelta
+
+CELERY_RESULT_BACKEND = "database"
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+CELERYBEAT_SCHEDULE = {
+    'login-every-115-minutes': {
+        'task': 'celerytasks.tasks.hotsocket_login',
+        'schedule': timedelta(seconds=5),
+    },
+
+    'run-queries-60-seconds': {
+        'task': 'celerytasks.tasks.run_queries',
+        'schedule': timedelta(seconds=5),
+    },
+}
+
+from api_settings import *
