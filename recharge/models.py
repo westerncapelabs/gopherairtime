@@ -11,7 +11,7 @@ class Recharge(models.Model):
     denomination = models.IntegerField()
     reference = models.BigIntegerField(unique=True, null=True)
     notes = models.CharField(max_length=100, verbose_name=u'Notes', null=True)
-    status = models.CharField(max_length=20)
+    status = models.IntegerField(null=True)
     recharge_system_ref = models.BigIntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status_confirmed_at = models.DateTimeField(null=True)
@@ -41,3 +41,21 @@ class RechargeError(models.Model):
 
     class Meta:
         verbose_name = "Recharge Error"
+
+
+class RechargeFailed(models.Model):
+    """
+    If rehcarge failed, logging failure
+    """
+    recharge_failed = models.ForeignKey(Recharge,
+                                       verbose_name="Failed Recharge",
+                                       related_name='recharge_failed')
+    recharge_status = models.CharField(max_length=255)
+    failure_message = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return "%s" % self.recharge_failed
+
+    class Meta:
+        verbose_name = "Failed Recharge"
+        verbose_name_plural = "Failed Recharges"
