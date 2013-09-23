@@ -39,7 +39,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = random.randint(0, 999999999999999)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": store_token.token,
@@ -59,7 +59,7 @@ class TestRecharge(TestCase):
         code = settings.HOTSOCKET_CODES
         reference = random.randint(0, 999999999999999)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": "x",
@@ -81,7 +81,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = random.randint(0, 999999999999999)
         query_1 = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query_1.reference)
+
         self.assertIsNone(query_1.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                     "token": store_token.token,
@@ -98,7 +98,7 @@ class TestRecharge(TestCase):
         self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query_1.status)
 
         query_3 = Recharge.objects.get(msisdn=27821231231)
-        self.assertIsNone(query_3.reference)
+
         self.assertIsNone(query_3.recharge_system_ref)
 
         data = {"username": settings.HOTSOCKET_USERNAME,
@@ -110,10 +110,12 @@ class TestRecharge(TestCase):
                 "reference": reference,
                 "as_json": True}
         get_recharge.delay(data, query_3.id)
-        query_3 = Recharge.objects.get(msisdn=27821231231)
-        self.assertIsNotNone(query_3.reference)
-        self.assertIsNotNone(query_3.recharge_system_ref)
-        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query_3.status)
+        query = Recharge.objects.get(msisdn=27821231231)
+        self.assertIsNone(query.recharge_system_ref)
+
+        error = RechargeError.objects.get(recharge_error=query.id)
+        self.assertEqual(error.error_id, settings.HOTSOCKET_CODES["REF_DUPLICATE"]["status"])
+        self.assertIsNotNone(error.last_attempt_at)
 
     def test_non_numeric_reference(self):
         code = settings.HOTSOCKET_CODES
@@ -121,7 +123,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = "a"
         query_1 = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query_1.reference)
+
         self.assertIsNone(query_1.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": store_token.token,
@@ -132,10 +134,12 @@ class TestRecharge(TestCase):
                 "reference": reference,
                 "as_json": True}
         get_recharge.delay(data, query_1.id)
-        query_1 = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNotNone(query_1.reference)
-        self.assertIsNotNone(query_1.recharge_system_ref)
-        self.assertEqual(settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"], query_1.status)
+        query = Recharge.objects.get(msisdn=27821231232)
+
+        self.assertIsNone(query.recharge_system_ref)
+        error = RechargeError.objects.get(recharge_error=query.id)
+        self.assertEqual(error.error_id, settings.HOTSOCKET_CODES["REF_NON_NUM"]["status"])
+        self.assertIsNotNone(error.last_attempt_at)
 
     def test_non_numeric_msisdn(self):
         code = settings.HOTSOCKET_CODES
@@ -143,7 +147,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = random.randint(0, 999999999999999)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": store_token.token,
@@ -155,7 +159,7 @@ class TestRecharge(TestCase):
                 "as_json": True}
         get_recharge.delay(data, query.id)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         error = RechargeError.objects.get(recharge_error=query.id)
         self.assertEqual(error.error_id, settings.HOTSOCKET_CODES["MSISDN_NON_NUM"]["status"])
@@ -168,7 +172,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = random.randint(0, 999999999999999)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": store_token.token,
@@ -180,7 +184,7 @@ class TestRecharge(TestCase):
                 "as_json": True}
         get_recharge.delay(data, query.id)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         error = RechargeError.objects.get(recharge_error=query.id)
         self.assertEqual(error.error_id, settings.HOTSOCKET_CODES["MSISDN_MALFORMED"]["status"])
@@ -193,7 +197,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = random.randint(0, 999999999999999)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": store_token.token,
@@ -205,7 +209,7 @@ class TestRecharge(TestCase):
                 "as_json": True}
         get_recharge.delay(data, query.id)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         error = RechargeError.objects.get(recharge_error=query.id)
         self.assertEqual(error.error_id, settings.HOTSOCKET_CODES["PRODUCT_CODE_BAD"]["status"])
@@ -219,7 +223,7 @@ class TestRecharge(TestCase):
         store_token = StoreToken.objects.get(id=1)
         reference = random.randint(0, 999999999999999)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         data = {"username": settings.HOTSOCKET_USERNAME,
                 "token": store_token.token,
@@ -231,7 +235,7 @@ class TestRecharge(TestCase):
                 "as_json": True}
         get_recharge.delay(data, query.id)
         query = Recharge.objects.get(msisdn=27821231232)
-        self.assertIsNone(query.reference)
+
         self.assertIsNone(query.recharge_system_ref)
         error = RechargeError.objects.get(recharge_error=query.id)
         self.assertEqual(error.error_id, settings.HOTSOCKET_CODES["NETWORK_CODE_BAD"]["status"])
