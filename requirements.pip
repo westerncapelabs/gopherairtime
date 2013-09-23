@@ -16,5 +16,7 @@ django-celery-email
 pep8
 pyflakes
 fabric
+BeautifulSoup
+mechanize
 django-tastypie<0.10.0
 requests
