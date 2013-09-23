@@ -1,4 +1,4 @@
-# Django settings for skeleton project.
+# Django settings for gopherairtime project.
 
 import os
 import djcelery
@@ -25,13 +25,14 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'skeleton',
+        'NAME': 'gopher',
         'USER': '',
         'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -115,10 +116,10 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'skeleton.urls'
+ROOT_URLCONF = 'gopherairtime.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'skeleton.wsgi.application'
+WSGI_APPLICATION = 'gopherairtime.wsgi.application'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -147,8 +148,9 @@ INSTALLED_APPS = (
     'debug_toolbar',
 
     # sample apps to explain usage
-    'app1',
+    'recharge',
     'celery_app',
+    'tastypie',
 )
 
 # A sample logging configuration. The only tangible logging
