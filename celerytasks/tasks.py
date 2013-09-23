@@ -160,3 +160,7 @@ def get_recharge(data, query_id):
 			                      recharge_error=query,
 			                      tries=1)
 			error.save()
+
+			update_recharge = Recharge.objects.get(id=query_id)
+			update_recharge.status = status
+			update_recharge.save()
