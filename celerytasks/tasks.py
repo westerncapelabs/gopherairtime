@@ -1,25 +1,45 @@
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from recharge.models import Recharge
+from celerytasks.models import StoreToken
 from django.conf import settings
 import requests
 import json
 import random
+import datetime
+from django.utils import timezone
 
 logger = get_task_logger(__name__)
 
 @task
 def hotsocket_login():
 	data = {
-			    "username": "trial_acc_1212",
-			    "password": "tr14l_l1k3m00n",
+			    "username": settings.HOTSOCKET_USERNAME,
+			    "password": settings.HOTSOCKET_PASSWORD,
 			    "as_json": True
 			}
-	url = "http://api.hotsocket.co.za:8080/test/login/"
+
+	url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["login"])
 	headers = {'content-type': 'application/json'}
 	response = requests.post(url, data=data)
 	json_response = response.json()
-	print json_response["response"]["token"]
+
+	if str(json_response["response"]["status"]) == "0000":
+		# Assuming the token will always be at primary key one
+		updated_at = timezone.now()
+		expire_at = updated_at + datetime.timedelta(minutes=settings.TOKEN_DURATION)
+		if not StoreToken.objects.filter(id=1).exists():
+			store = StoreToken(token=json_response["response"]["token"],
+			                   updated_at=updated_at,
+			                   expire_at=expire_at,
+			                   pk=1)
+			store.save()
+		else:
+			query = StoreToken.objects.get(id=1)
+			query.token = json_response["response"]["token"]
+			query.updated_at = updated_at
+			query.expire_at = expire_at
+			query.save()
 
 
 @task
@@ -38,20 +58,25 @@ def recharge_query():
 	"""
 	Queries database and passes it to the get_recharge() task asynchronously
 	"""
-	queryset = (Recharge.objects.filter(recharge_system_ref=None).
-	            filter(reference=None).all())
+	try:
+		store_token = StoreToken.objects.get(id=1)
+		queryset = (Recharge.objects.filter(recharge_system_ref=None).
+		            filter(reference=None).all())
 
-	for query in queryset:
-		reference = random.randint(0, 999999999999999)  # reference to be passed with hot socket
-		data = {"username": settings.HOTSOCKET_USERNAME,
-				"token": "awo7LCrtyF5qG5GDyvfpCpy2D3ALcdnoSdZ945UJsLfOvsYJS5ygXET0m4upvnJqRtAevltdWP75nRVHtltriHtaMEbp182ubF+pM6knRgY=",
-				"recipient_msisdn": query.msisdn,
-				"product_code": query.product_code,
-				"denomination": query.denomination,  # In cents
-				"network_code": "VOD",
-				"reference": reference,
-				"as_json": True}
-		get_recharge.delay(data, query.id, reference)
+		for query in queryset:
+			reference = random.randint(0, 999999999999999)  # reference to be passed with hot socket
+			data = {"username": settings.HOTSOCKET_USERNAME,
+					"token": store_token.token,
+					"recipient_msisdn": query.msisdn,
+					"product_code": query.product_code,
+					"denomination": query.denomination,  # In cents
+					"network_code": "VOD",
+					"reference": reference,
+					"as_json": True}
+			get_recharge.delay(data, query.id, reference)
+	except StoreToken.DoesNotExist, exc:
+		hotsocket_login.delay()
+		recharge_query.retry(countdown=20)
 
 
 @task
