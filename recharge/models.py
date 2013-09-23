@@ -1,4 +1,9 @@
 from django.db import models
+import time
+
+def random_default_value():
+    # Returning time in seconds with high granulity
+    return int(time.time() * 100000)
 
 
 class Recharge(models.Model):
@@ -9,7 +14,7 @@ class Recharge(models.Model):
     msisdn = models.BigIntegerField()
     product_code = models.CharField(max_length=20)
     denomination = models.IntegerField()
-    reference = models.BigIntegerField(unique=True, null=True)
+    reference = models.BigIntegerField(unique=True, default=random_default_value)
     notes = models.CharField(max_length=100, verbose_name=u'Notes', null=True)
     status = models.IntegerField(null=True)
     recharge_system_ref = models.BigIntegerField(null=True)
