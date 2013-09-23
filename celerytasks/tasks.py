@@ -1,6 +1,6 @@
 from celery.decorators import task
 from celery.utils.log import get_task_logger
-from recharge.models import Recharge, RechargeError
+from recharge.models import Recharge, RechargeError, RechargeFailed
 from celerytasks.models import StoreToken
 from django.conf import settings
 import requests
@@ -16,6 +16,7 @@ from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError
                                              NonNumericReferenceError)
 
 logger = get_task_logger(__name__)
+CHECK_STATUS = settings.HS_RECHARGE_STATUS_CODES
 
 @task
 def hotsocket_login():
@@ -66,9 +67,7 @@ def recharge_query():
 	"""
 	try:
 		store_token = StoreToken.objects.get(id=1)
-		queryset = (Recharge.objects.filter(recharge_system_ref=None).
-		            filter(reference=None).all())
-		queryset = Recharge.objects.all()
+		queryset = Recharge.objects.filter(status=None).all()
 
 		for query in queryset:
 			reference = random.randint(0, 999999999999999)  # reference to be passed with hot socket
@@ -88,7 +87,22 @@ def recharge_query():
 
 @task
 def status_query():
-	pass
+	"""
+	Queries database to check if status is null and recharge error and reference is not null
+	"""
+	print "Running status query"
+	try:
+		store_token = StoreToken.objects.get(id=1)
+		queryset = Recharge.objects.filter(status=0).all()
+		for query in queryset:
+			data = {"username": settings.HOTSOCKET_USERNAME,
+					"token": store_token.token,
+					"reference": query.reference,
+					"as_json": True}
+			check_recharge_status.delay(data, query.id)
+	except StoreToken.DoesNotExist, exc:
+		hotsocket_login.delay()
+		recharge_query.retry(countdown=20, exc=exc)
 
 
 @task
@@ -98,6 +112,7 @@ def errors_query():
 
 @task()
 def get_recharge(data, query_id):
+		print "Running get recharge for %s" % query_id
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["recharge"])
 		headers = {'content-type': 'application/json'}
 		code = settings.HOTSOCKET_CODES
@@ -110,7 +125,7 @@ def get_recharge(data, query_id):
 			if str(status) == code["SUCCESS"]["status"]:
 				query.reference = data["reference"]
 				query.recharge_system_ref = json_response["response"]["hotsocket_ref"]
-				query.status = status
+				query.status = CHECK_STATUS["PENDING"]["code"]
 				query.save()
 
 			elif status == code["REF_DUPLICATE"]["status"]:
@@ -154,6 +169,7 @@ def get_recharge(data, query_id):
 
 		except (MSISDNNonNumericError, MSISDMalFormedError, BadProductCodeError,
 		        BadNetworkCodeError, BadCombinationError), exc:
+			print json_response
 			error = RechargeError(error_id=status,
 			                      error_message=message,
 			                      last_attempt_at=timezone.now(),
@@ -162,5 +178,35 @@ def get_recharge(data, query_id):
 			error.save()
 
 			update_recharge = Recharge.objects.get(id=query_id)
-			update_recharge.status = status
+			update_recharge.status = CHECK_STATUS["PRE_SUB_ERROR"]["code"]
 			update_recharge.save()
+
+
+@task
+def check_recharge_status(data, query_id):
+		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["status"])
+		headers = {'content-type': 'application/json'}
+		code = settings.HOTSOCKET_CODES
+		query = Recharge.objects.get(id=query_id)
+		print "Checking the status for %s" % query_id
+		try:
+			response = requests.post(url, data=data)
+			json_response = response.json()
+			status = json_response["response"]["status"]
+			message = json_response["response"]["message"]
+			recharge_status_code = json_response["response"]["recharge_status_cd"]
+
+			if str(status) == str(code["SUCCESS"]["status"]):
+				query.status = int(recharge_status_code)
+				query.status_confirmed_at = timezone.now()
+				print "the status code %s for saving" % query.status
+				query.save()
+
+			if int(recharge_status_code) == CHECK_STATUS["FAILED"]["code"]:
+				failure = RechargeFailed(recharge_failed=query,
+				                         recharge_status=json_response["response"]["recharge status"],
+				                         failure_message=message
+				                         )
+				failure.save()
+		except:
+			pass
