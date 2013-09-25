@@ -135,7 +135,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -147,8 +146,6 @@ INSTALLED_APPS = (
     'djcelery_email',
     'debug_toolbar',
     'users',
-
-    # sample apps to explain usage
     'recharge',
     'celery_app',
     'tastypie',
