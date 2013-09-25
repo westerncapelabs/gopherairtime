@@ -146,6 +146,7 @@ INSTALLED_APPS = (
     'djcelery',
     'djcelery_email',
     'debug_toolbar',
+    'users',
 
     # sample apps to explain usage
     'recharge',
