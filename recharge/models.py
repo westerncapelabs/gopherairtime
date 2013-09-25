@@ -20,6 +20,9 @@ class Recharge(models.Model):
     recharge_system_ref = models.BigIntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status_confirmed_at = models.DateTimeField(null=True)
+    recharge_project = models.ForeignKey("users.Project",
+                                         null=True,
+                                         related_name='recharge_project')
 
     def __unicode__(self):
         return "%s" % self.msisdn
