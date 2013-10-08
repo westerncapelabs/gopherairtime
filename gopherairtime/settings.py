@@ -147,8 +147,6 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'users',
     'recharge',
-    'celery_app',
-    'tastypie',
     'celerytasks',
     'kombu.transport.django'
 )
