@@ -29,7 +29,7 @@ def restart():
 
 def deploy():
     with cd(env.path):
-        sudo('git pull', user=DEPLOY_USER)
+        sudo('git pull')
         sudo('ve/bin/python manage.py syncdb --migrate --noinput',
              user=DEPLOY_USER)
         sudo('ve/bin/python manage.py collectstatic --noinput',
@@ -38,5 +38,6 @@ def deploy():
 
 def install_packages(force=False):
     with cd(env.path):
+        sudo('git pull')
         sudo('ve/bin/pip install %s -r requirements.pip' % (
-             '--upgrade' if force else '',), user=DEPLOY_USER)
+             '--upgrade' if force else '',))
