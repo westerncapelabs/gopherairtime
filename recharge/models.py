@@ -1,4 +1,9 @@
 from django.db import models
+import time
+
+def random_default_value():
+    # Returning time in seconds with high granulity
+    return int(time.time() * 100000)
 
 
 class Recharge(models.Model):
@@ -9,12 +14,15 @@ class Recharge(models.Model):
     msisdn = models.BigIntegerField()
     product_code = models.CharField(max_length=20)
     denomination = models.IntegerField()
-    reference = models.BigIntegerField(unique=True, null=True)
+    reference = models.BigIntegerField(unique=True, default=random_default_value)
     notes = models.CharField(max_length=100, verbose_name=u'Notes', null=True)
-    status = models.CharField(max_length=20)
+    status = models.IntegerField(null=True)
     recharge_system_ref = models.BigIntegerField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status_confirmed_at = models.DateTimeField(null=True)
+    recharge_project = models.ForeignKey("users.Project",
+                                         null=True,
+                                         related_name='recharge_project')
 
     def __unicode__(self):
         return "%s" % self.msisdn
@@ -41,3 +49,21 @@ class RechargeError(models.Model):
 
     class Meta:
         verbose_name = "Recharge Error"
+
+
+class RechargeFailed(models.Model):
+    """
+    If rehcarge failed, logging failure
+    """
+    recharge_failed = models.ForeignKey(Recharge,
+                                       verbose_name="Failed Recharge",
+                                       related_name='recharge_failed')
+    recharge_status = models.CharField(max_length=255)
+    failure_message = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return "%s" % self.recharge_failed
+
+    class Meta:
+        verbose_name = "Failed Recharge"
+        verbose_name_plural = "Failed Recharges"

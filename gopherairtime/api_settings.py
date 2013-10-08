@@ -26,5 +26,12 @@ HOTSOCKET_CODES = {
     "NETWORK_CODE_BAD": {"status": 6012, "message": "Unrecognized network code."},
     "COMBO_BAD": {"status": 6020, "message": " Network code + Product Code + Denomination combination is invalid."},
     "REF_DUPLICATE": {"status": 6016, "message": "Reference must be unique."},
-    "REF_NON_NUM": {"status": 6017, "message": "Reference must be a numeric value "},
+    "REF_NON_NUM": {"status": 6017, "message": "Reference must be a numeric value."},
+}
+
+HS_RECHARGE_STATUS_CODES = {
+    "PENDING": {"code": 0 },
+    "PRE_SUB_ERROR": {"code": 1},
+    "FAILED": {"code": 2},
+    "SUCCESS": {"code": 3},
 }
