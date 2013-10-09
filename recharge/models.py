@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import Project
 import time
 
 def random_default_value():
@@ -15,13 +16,12 @@ class Recharge(models.Model):
     product_code = models.CharField(max_length=20)
     denomination = models.IntegerField()
     reference = models.BigIntegerField(unique=True, default=random_default_value)
-    notes = models.CharField(max_length=100, verbose_name=u'Notes', null=True)
-    status = models.IntegerField(null=True)
-    recharge_system_ref = models.BigIntegerField(null=True)
+    notes = models.CharField(max_length=100, verbose_name=u'Notes', null=True, blank=True)
+    status = models.IntegerField(null=True, blank=True)
+    recharge_system_ref = models.BigIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    status_confirmed_at = models.DateTimeField(null=True)
-    recharge_project = models.ForeignKey("users.Project",
-                                         null=True,
+    status_confirmed_at = models.DateTimeField(null=True, blank=True)
+    recharge_project = models.ForeignKey(Project,
                                          related_name='recharge_project')
 
     def __unicode__(self):
