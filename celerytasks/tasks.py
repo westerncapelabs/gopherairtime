@@ -2,13 +2,12 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from recharge.models import Recharge, RechargeError, RechargeFailed
 from celerytasks.models import StoreToken
+from users.models import Project
 from django.conf import settings
 import requests
-import json
 import random
 import datetime
 from django.utils import timezone
-from celery.exceptions import MaxRetriesExceededError
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
@@ -27,7 +26,6 @@ def hotsocket_login():
 			}
 
 	url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["login"])
-	headers = {'content-type': 'application/json'}
 	response = requests.post(url, data=data)
 	json_response = response.json()
 
