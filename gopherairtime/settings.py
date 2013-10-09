@@ -148,6 +148,7 @@ INSTALLED_APPS = (
     'users',
     'recharge',
     'celerytasks',
+    'tastypie',
     'kombu.transport.django'
 )
 

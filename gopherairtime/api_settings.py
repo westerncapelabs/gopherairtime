@@ -35,3 +35,5 @@ HS_RECHARGE_STATUS_CODES = {
     "FAILED": {"code": 2},
     "SUCCESS": {"code": 3},
 }
+
+INTERNAL_ERROR = {"LIMIT_REACHED": {"status": 404, "message": "Threshold Limit Reached."}}

@@ -4,11 +4,8 @@ from recharge.models import Recharge, RechargeError, RechargeFailed
 from celerytasks.models import StoreToken
 from django.conf import settings
 import requests
-import json
-import random
 import datetime
 from django.utils import timezone
-from celery.exceptions import MaxRetriesExceededError
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
@@ -27,7 +24,6 @@ def hotsocket_login():
 			}
 
 	url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["login"])
-	headers = {'content-type': 'application/json'}
 	response = requests.post(url, data=data)
 	json_response = response.json()
 
@@ -54,7 +50,7 @@ def run_queries():
 	"""
 	Main purpose of this is to call functions that query database and to chain them
 	"""
-	# logger.info("Running database query")
+	logger.info("Running database query")
 	recharge_query.delay()
 	status_query.delay()
 	errors_query.delay()
@@ -65,12 +61,17 @@ def recharge_query():
 	"""
 	Queries database and passes it to the get_recharge() task asynchronously
 	"""
+	error_list = []
 	try:
 		store_token = StoreToken.objects.get(id=1)
 		queryset = Recharge.objects.filter(status=None).all()
-
 		for query in queryset:
-			reference = random.randint(0, 999999999999999)  # reference to be passed with hot socket
+			limit = query.recharge_project.recharge_limit
+			if query.denomination > limit:
+				logger.error("Recharge limit exceeded for %s", query.msisdn)
+				error_list.append(query.id)
+				continue
+
 			data = {"username": settings.HOTSOCKET_USERNAME,
 					"token": store_token.token,
 					"recipient_msisdn": query.msisdn,
@@ -83,9 +84,25 @@ def recharge_query():
 			query.save()
 			get_recharge.delay(data, query.id)
 
+
 	except StoreToken.DoesNotExist, exc:
 		hotsocket_login.delay()
 		recharge_query.retry(countdown=20, exc=exc)
+
+	finally:
+		# The threshhold exceeded error is 404
+		if error_list:
+			for _id in error_list:
+				error = RechargeError(error_id=settings.INTERNAL_ERROR["LIMIT_REACHED"]["status"],
+				                      error_message=settings.INTERNAL_ERROR["LIMIT_REACHED"]["message"],
+				                      last_attempt_at=timezone.now(),
+				                      recharge_error_id=_id,
+				                      tries=1)
+			error.save()
+
+			update_recharge = Recharge.objects.get(id=_id)
+			update_recharge.status = settings.INTERNAL_ERROR["LIMIT_REACHED"]["status"]
+			update_recharge.save()
 
 
 @task
@@ -93,7 +110,7 @@ def status_query():
 	"""
 	Queries database to check if status is null and recharge error and reference is not null
 	"""
-	print "Running status query"
+	logger.info("Running status query")
 	try:
 		store_token = StoreToken.objects.get(id=1)
 		queryset = Recharge.objects.filter(status=0).all()
@@ -115,9 +132,8 @@ def errors_query():
 
 @task()
 def get_recharge(data, query_id):
-		print "Running get recharge for %s" % query_id
+		logger.info("Running get recharge for %s" % query_id)
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["recharge"])
-		headers = {'content-type': 'application/json'}
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
 
@@ -184,10 +200,10 @@ def get_recharge(data, query_id):
 @task
 def check_recharge_status(data, query_id):
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["status"])
-		headers = {'content-type': 'application/json'}
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
-		print "Checking the status for %s" % query_id
+		logger.info("Checking the status for %s" % query_id)
+
 		try:
 			response = requests.post(url, data=data)
 			json_response = response.json()

@@ -3,13 +3,26 @@ from tastypie.authorization import Authorization
 from recharge.models import Recharge
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.http import HttpUnauthorized
+from tastypie import fields
 import json
+from users.models import Project
 
 
 class OverrideApiAuthentication(ApiKeyAuthentication):
     def _unauthorized(self):
         data = json.dumps({"error": "You are not authorized"})
         return HttpUnauthorized(content=data, content_type="application/json; charset=utf-8")
+
+
+class ProjectResource(ModelResource):
+    class Meta:
+        resource_name = "project"
+        list_allowed_methods = ["get"]
+        authentication = OverrideApiAuthentication()
+        authorization = Authorization()
+        include_resource_uri = True
+        always_return_data = True
+        queryset = Project.objects.all()
 
 
 class RechargeResource(ModelResource):
@@ -39,6 +52,8 @@ class RechargeResource(ModelResource):
                     ]
                 }
     """
+
+    recharge_project = fields.ForeignKey(ProjectResource, "recharge_project", full=True)
     class Meta:
         resource_name = "recharge"
         list_allowed_methods = ["put", "get", "post", "patch"]
