@@ -52,7 +52,7 @@ def run_queries():
 	"""
 	Main purpose of this is to call functions that query database and to chain them
 	"""
-	# logger.info("Running database query")
+	logger.info("Running database query")
 	recharge_query.delay()
 	status_query.delay()
 	errors_query.delay()
@@ -63,12 +63,17 @@ def recharge_query():
 	"""
 	Queries database and passes it to the get_recharge() task asynchronously
 	"""
+	error_list = []
 	try:
 		store_token = StoreToken.objects.get(id=1)
 		queryset = Recharge.objects.filter(status=None).all()
-
 		for query in queryset:
-			reference = random.randint(0, 999999999999999)  # reference to be passed with hot socket
+			limit = query.recharge_project.recharge_limit
+			if query.denomination > limit:
+				logger.error("Recharge limit exceeded for %s", query.msisdn)
+				error_list.append(query.id)
+				continue
+
 			data = {"username": settings.HOTSOCKET_USERNAME,
 					"token": store_token.token,
 					"recipient_msisdn": query.msisdn,
@@ -81,9 +86,25 @@ def recharge_query():
 			query.save()
 			get_recharge.delay(data, query.id)
 
+
 	except StoreToken.DoesNotExist, exc:
 		hotsocket_login.delay()
 		recharge_query.retry(countdown=20, exc=exc)
+
+	finally:
+		# The threshhold exceeded error is 404
+		if error_list:
+			for _id in error_list:
+				error = RechargeError(error_id=settings.INTERNAL_ERROR["LIMIT_REACHED"]["status"],
+				                      error_message=settings.INTERNAL_ERROR["LIMIT_REACHED"]["message"],
+				                      last_attempt_at=timezone.now(),
+				                      recharge_error_id=_id,
+				                      tries=1)
+			error.save()
+
+			update_recharge = Recharge.objects.get(id=_id)
+			update_recharge.status = settings.INTERNAL_ERROR["LIMIT_REACHED"]["status"]
+			update_recharge.save()
 
 
 @task
