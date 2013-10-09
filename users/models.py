@@ -8,7 +8,8 @@ class Project(models.Model):
     """
     users_projects = models.ForeignKey(User)
     name = models.CharField(max_length=30)
-    budget = models.IntegerField(null=True)
+    budget = models.IntegerField(null=True, blank=True)
+    recharge_limit = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
