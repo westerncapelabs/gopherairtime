@@ -110,7 +110,7 @@ def status_query():
 	"""
 	Queries database to check if status is null and recharge error and reference is not null
 	"""
-	print "Running status query"
+	logger.info("Running status query")
 	try:
 		store_token = StoreToken.objects.get(id=1)
 		queryset = Recharge.objects.filter(status=0).all()
@@ -132,7 +132,7 @@ def errors_query():
 
 @task()
 def get_recharge(data, query_id):
-		print "Running get recharge for %s" % query_id
+		logger.info("Running get recharge for %s" % query_id)
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["recharge"])
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
@@ -202,7 +202,8 @@ def check_recharge_status(data, query_id):
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["status"])
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
-		print "Checking the status for %s" % query_id
+		logger.info("Checking the status for %s" % query_id)
+
 		try:
 			response = requests.post(url, data=data)
 			json_response = response.json()
