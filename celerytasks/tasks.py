@@ -2,10 +2,8 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from recharge.models import Recharge, RechargeError, RechargeFailed
 from celerytasks.models import StoreToken
-from users.models import Project
 from django.conf import settings
 import requests
-import random
 import datetime
 from django.utils import timezone
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
@@ -136,7 +134,6 @@ def errors_query():
 def get_recharge(data, query_id):
 		print "Running get recharge for %s" % query_id
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["recharge"])
-		headers = {'content-type': 'application/json'}
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
 
@@ -203,7 +200,6 @@ def get_recharge(data, query_id):
 @task
 def check_recharge_status(data, query_id):
 		url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["status"])
-		headers = {'content-type': 'application/json'}
 		code = settings.HOTSOCKET_CODES
 		query = Recharge.objects.get(id=query_id)
 		print "Checking the status for %s" % query_id
