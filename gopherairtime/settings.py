@@ -234,12 +234,12 @@ CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERYBEAT_SCHEDULE = {
     'login-every-115-minutes': {
         'task': 'celerytasks.tasks.hotsocket_login',
-        'schedule': timedelta(seconds=5),
+        'schedule': timedelta(minutes=115),
     },
 
     'run-queries-60-seconds': {
         'task': 'celerytasks.tasks.run_queries',
-        'schedule': timedelta(seconds=5),
+        'schedule': timedelta(seconds=60),
     },
 }
 
