@@ -224,7 +224,7 @@ RAVEN_CONFIG = {
 }
 
 djcelery.setup_loader()
-BROKER_URL = "django://"
+BROKER_URL = "amqp://guest:guest@localhost:5672/"
 
 from datetime import timedelta
 
