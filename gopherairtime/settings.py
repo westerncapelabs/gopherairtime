@@ -26,8 +26,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'gopher',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'USER': 'mikej',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '5432',
     }

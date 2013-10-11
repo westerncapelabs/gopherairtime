@@ -1,7 +1,7 @@
 from django.db import models
 
 class StoreToken(models.Model):
-    token = models.CharField(max_length=120)
+    token = models.CharField(max_length=150)
     updated_at = models.DateTimeField(auto_now_add=True)
     expire_at = models.DateTimeField(null=True)
 
