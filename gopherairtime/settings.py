@@ -244,3 +244,13 @@ CELERYBEAT_SCHEDULE = {
 }
 
 from api_settings import *
+
+
+# ======================================================
+    # VUMIGO SMS SENDER CONFIG
+# ======================================================
+SMS_CONFIG = {"sender_type": "logging"}
+API_URL = ""
+ACCOUNT_ID = ""
+CONVERSATION_ID = ""
+CONVERSATION_TOKEN = ""
