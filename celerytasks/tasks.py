@@ -11,7 +11,7 @@ from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
                                              NonNumericReferenceError)
-from gopherairtime.sms_sender import VumiGoSender
+from celerytasks.sms_sender import VumiGoSender
 
 
 logger = get_task_logger(__name__)
