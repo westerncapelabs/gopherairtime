@@ -219,7 +219,7 @@ def check_recharge_status(data, query_id):
 				query.save()
 
 				if int(recharge_status_code) == 3:
-					if query.notification or query.notification != "":
+					if query.notification:
 						send_sms.delay(query.msisdn, query.notification)
 						query.notification_sent = True
 						query.save()
@@ -295,8 +295,8 @@ def query_network(msisdn):
 # ==========================================================
 @task
 def send_sms(msisdn, sms):
-    sms = VumiGoSender(api_url=settings.API_URL,
-                       account_id=settings.ACCOUNT_ID,
-                       conversation_id=settings.CONVERSATION_ID,
-                       conversation_token=settings.CONVERSATION_TOKEN)
-    sms.send_sms(msisdn, sms)
+	sender = VumiGoSender(api_url=settings.API_URL,
+	                   account_id=settings.ACCOUNT_ID,
+	                   conversation_id=settings.CONVERSATION_ID,
+	                   conversation_token=settings.CONVERSATION_TOKEN)
+	sender.send_sms(msisdn, sms)
