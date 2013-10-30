@@ -11,6 +11,8 @@ from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
                                              NonNumericReferenceError)
+from gopherairtime.sms_sender import VumiGoSender
+
 
 logger = get_task_logger(__name__)
 CHECK_STATUS = settings.HS_RECHARGE_STATUS_CODES
@@ -216,6 +218,12 @@ def check_recharge_status(data, query_id):
 				query.status_confirmed_at = timezone.now()
 				query.save()
 
+				if int(recharge_status_code) == 3:
+					if query.notification or query.notification != "":
+						send_sms.delay(query.msisdn, query.notification)
+						query.notification_sent = True
+						query.save()
+
 			elif status == code["TOKEN_EXPIRE"]["status"]:
 				raise TokenExpireError(message)
 
@@ -280,3 +288,15 @@ def query_network(msisdn):
         if str(msisdn).startswith(prefix):
             return op
     return None
+
+
+# ==========================================================
+	#  VumiGoSender
+# ==========================================================
+@task
+def send_sms(msisdn, sms):
+    sms = VumiGoSender(api_url=settings.API_URL,
+                       account_id=settings.ACCOUNT_ID,
+                       conversation_id=settings.CONVERSATION_ID,
+                       conversation_token=settings.CONVERSATION_TOKEN)
+    sms.send_sms(msisdn, sms)
