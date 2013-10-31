@@ -10,6 +10,9 @@ class Project(models.Model):
     name = models.CharField(max_length=30)
     budget = models.IntegerField(null=True, blank=True)
     recharge_limit = models.IntegerField()
+    account_id = models.CharField(max_length=100)
+    conversation_id = models.CharField(max_length=100)
+    conversation_token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
