@@ -3,7 +3,7 @@ from django.conf import settings
 
 # Third Party
 import mandrill
-
+import requests
 
 def send_mandrill_email(html, text, subject, email):
     """
@@ -23,3 +23,7 @@ def send_mandrill_email(html, text, subject, email):
         }
 
     return mandrill_email.messages.send(message=mandrill_data)
+
+
+def send_to_pushover(balance):
+    response = requests.post()
