@@ -316,10 +316,11 @@ def check_recharge_status(data, query_id):
 				query.status_confirmed_at = timezone.now()
 				query.save()
 
-				# Updating the account balance after each query
-				balance = json_response["response"]["running_balance"]
-				account = GopherAirtimeAccount(running_balance=balance)
-				account.save()
+				if int(recharge_status_code) == 3:
+					# Updating the account balance after each query
+					balance = json_response["response"]["running_balance"]
+					account = GopherAirtimeAccount(running_balance=balance)
+					account.save()
 
 			elif status == code["TOKEN_EXPIRE"]["status"]:
 				raise TokenExpireError(message)
