@@ -10,7 +10,8 @@ from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
-                                             NonNumericReferenceError)
+                                             NonNumericReferenceError, SentryException)
+from users.models import GopherAirtimeAccount
 
 logger = get_task_logger(__name__)
 CHECK_STATUS = settings.HS_RECHARGE_STATUS_CODES
@@ -44,6 +45,48 @@ def hotsocket_login():
 			query.expire_at = expire_at
 			query.save()
 
+@task
+def balance_checker():
+	# Try get the stored token if not there
+	logger.info("Performing balance query")
+	try:
+		store_token = StoreToken.objects.get(id=1)
+		data = {"username": settings.HOTSOCKET_USERNAME,
+				"token": store_token.token,
+				"as_json": True}
+		balance_query.delay(data)
+
+	# If it is the first time its running do the hotsocket login again
+	except StoreToken.DoesNotExist, exc:
+		logger.warning("Store token not valid, trying hotsocket login again")
+		# If the hotsocket_login is ready run balance checker again.
+		if hotsocket_login.delay().ready():
+			balance_checker.retry(exc=exc)
+
+@task
+def balance_query(data):
+	code = settings.HOTSOCKET_CODES
+	url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["balance"])
+	try:
+		response = requests.post(url, data=data)
+		json_response = response.json()
+		status = json_response["response"]["status"]
+		message = json_response["response"]["message"]
+
+		if str(status) == code["SUCCESS"]["status"]:
+			balance = json_response["response"]["running_balance"]
+			account = GopherAirtimeAccount(running_balance=balance)
+			account.save()
+		else:
+			raise SentryException("Checking balance failed with"
+			                	  "flickswitch status code %s and message %s "
+			                	  % (status, message))
+
+
+	except (TokenInvalidError, TokenExpireError), exc:
+		if hotsocket_login.delay().ready():
+			balance_query.retry(exc=exc)
+
 
 @task
 def run_queries():
@@ -63,11 +106,16 @@ def recharge_query():
 	"""
 	error_list = []
 	try:
+		# Storing the recharge token in the database
 		store_token = StoreToken.objects.get(id=1)
+		# Getting recharges where the status is none
 		queryset = Recharge.objects.filter(status=None).all()
 		for query in queryset:
+			# Checking if the limit has been exceeded
 			limit = query.recharge_project.recharge_limit
 			if query.denomination > limit:
+				# if limit exceeded add to logger and error list, add to error_list and skip
+				# entry
 				logger.error("Recharge limit exceeded for %s", query.msisdn)
 				error_list.append(query.id)
 				continue
@@ -80,17 +128,20 @@ def recharge_query():
 					"network_code": query_network(query.msisdn),
 					"reference": query.reference,
 					"as_json": True}
+			# seting the status to -1 to indicate that the task is already running,
+			# used to prevent task from re-running
 			query.status = -1
 			query.save()
 			get_recharge.delay(data, query.id)
 
-
+	# If it is the first time its running do the hotsocket login again
 	except StoreToken.DoesNotExist, exc:
 		hotsocket_login.delay()
 		recharge_query.retry(countdown=20, exc=exc)
 
 	finally:
 		# The threshhold exceeded error is 404
+		# Getting all the error_ids and storing it in the database.
 		if error_list:
 			for _id in error_list:
 				error = RechargeError(error_id=settings.INTERNAL_ERROR["LIMIT_REACHED"]["status"],
