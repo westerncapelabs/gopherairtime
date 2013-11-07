@@ -1,17 +1,30 @@
-from celery.decorators import task
-from celery.utils.log import get_task_logger
-from recharge.models import Recharge, RechargeError, RechargeFailed
-from celerytasks.models import StoreToken
-from django.conf import settings
-import requests
+# Python
 import datetime
+
+# Django
+from django.template.loader import get_template
+from django.template import Context
 from django.utils import timezone
+from django.conf import settings
+
+# Project
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
                                              NonNumericReferenceError, SentryException)
+from recharge.models import Recharge, RechargeError, RechargeFailed
+from libs.shareddefs import send_mandrill_email
 from users.models import GopherAirtimeAccount
+from celerytasks.models import StoreToken
+
+# Celery
+from celery.utils.log import get_task_logger
+from celery.decorators import task
+
+# Third Party
+import requests
+
 
 logger = get_task_logger(__name__)
 CHECK_STATUS = settings.HS_RECHARGE_STATUS_CODES
@@ -45,6 +58,10 @@ def hotsocket_login():
 			query.expire_at = expire_at
 			query.save()
 
+
+# =============================================================================
+#	Balance Checker Code
+# =============================================================================
 @task
 def balance_checker():
 	# Try get the stored token if not there
@@ -74,10 +91,16 @@ def balance_query(data):
 		message = json_response["response"]["message"]
 
 		if str(status) == code["SUCCESS"]["status"]:
+			# if status =="0000" storing updating the balance
 			balance = json_response["response"]["running_balance"]
 			account = GopherAirtimeAccount(running_balance=balance)
 			account.save()
+
+			# Checking if balance is below threshold
+			if balance < settings.THRESHOLD_WARNING_LEVEL:
+				low_balance_warning.delay(balance)
 		else:
+			# If status != "0000": raise sentry error
 			raise SentryException("Checking balance failed with"
 			                	  "flickswitch status code %s and message %s "
 			                	  % (status, message))
@@ -87,6 +110,32 @@ def balance_query(data):
 		if hotsocket_login.delay().ready():
 			balance_query.retry(exc=exc)
 
+
+@task
+def low_balance_warning(balance):
+	logger.info("Running the low balance warning notifier")
+	send_threshold_warning_email.delay(balance)
+
+
+# Mandrill email
+@task
+def send_threshold_warning_email(balance):
+	logger.info("Notifying low balance by e-mail")
+	context_email = {"balance": balance}
+	subject = "Balance Running Low"
+	email = settings.ADMIN_EMAIL["threshold_limit"]
+	html = get_template("email/email_threshold_notify.html").render(Context(context_email))
+	text = get_template("email/email_threshold_notify.txt").render(Context(context_email))
+	send_mandrill_email(html, text, subject, [{"email": email}])
+
+
+# End Balance Checker Code
+# =============================================================================
+
+
+# =============================================================================
+#	Running Recharge and Status Query
+# =============================================================================
 
 @task
 def run_queries():
@@ -267,6 +316,11 @@ def check_recharge_status(data, query_id):
 				query.status_confirmed_at = timezone.now()
 				query.save()
 
+				# Updating the account balance after each query
+				balance = json_response["response"]["running_balance"]
+				account = GopherAirtimeAccount(running_balance=balance)
+				account.save()
+
 			elif status == code["TOKEN_EXPIRE"]["status"]:
 				raise TokenExpireError(message)
 
@@ -331,3 +385,6 @@ def query_network(msisdn):
         if str(msisdn).startswith(prefix):
             return op
     return None
+
+#	Recharge and status query end
+# =============================================================================
