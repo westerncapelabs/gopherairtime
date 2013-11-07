@@ -1,4 +1,4 @@
-Django
+Django==1.5.1
 South
 gunicorn
 supervisor
@@ -20,3 +20,4 @@ BeautifulSoup
 mechanize
 django-tastypie<0.10.0
 requests
+mandrill
