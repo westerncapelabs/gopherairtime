@@ -257,3 +257,10 @@ ADMIN_EMAIL = {
 
 
 MANDRILL_KEY = ""
+
+
+# PUSHOVER STUFF
+PUSHOVER_APP = "afJu7n9UPCnLbSRnR7kstgxRCAezCK"
+PUSHOVER_USERS = {"mike": "AoQCnry6mhmL0UAiilB1m5udFNjk5K"}
+PUSHOVER_BASE_URL = "https://api.pushover.net/1/"
+MESSAGE_URL = PUSHOVER_BASE_URL + "messages.json"
