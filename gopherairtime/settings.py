@@ -241,6 +241,19 @@ CELERYBEAT_SCHEDULE = {
         'task': 'celerytasks.tasks.run_queries',
         'schedule': timedelta(seconds=60),
     },
+
+    'run-balance-queries-60-minutes': {
+        'task': 'celerytasks.tasks.balance_checker',
+        'schedule': timedelta(minutes=60),
+    },
 }
 
 from api_settings import *
+
+ADMIN_EMAIL = {
+    "threshold_limit": "mark+gopher_sentry@westerncapelabs.com",
+    "from_gopher": "mark+from_gopher@westerncapelabs.com"
+    }
+
+
+MANDRILL_KEY = ""
