@@ -37,3 +37,6 @@ HS_RECHARGE_STATUS_CODES = {
 }
 
 INTERNAL_ERROR = {"LIMIT_REACHED": {"status": 404, "message": "Threshold Limit Reached."}}
+
+
+THRESHOLD_WARNING_LEVEL = 500  # Rands
