@@ -6,6 +6,8 @@ from recharge.models import Recharge
 
 class TestRechargeResource(ResourceTestCase):
 
+    fixtures = ["test_auth_users.json", "test_projects.json", "test_tastypie_api_key.json"]
+
     def test_url_configured(self):
         """
         Testing the basic url is configured
@@ -20,13 +22,14 @@ class TestRechargeResource(ResourceTestCase):
                                kwargs={'resource_name': 'recharge',
                                'api_name': 'v1'})
 
-        response = self.api_client.post(url_recharge,
+        response = self.api_client.post("%s?username=g&api_key=api_key" % url_recharge,
                                         format="json",
                                         data={
                                         "denomination": 10,
                                         "product_code": "recharge",
                                         "notes": "Grassroots Random Winner",
-                                        "msisdn": 27821231231
+                                        "msisdn": 27821231231,
+                                        "recharge_project": "/api/v1/project/1/"
                                         })
 
         msisdn_recharge = Recharge.objects.get(msisdn=27821231231)
@@ -46,18 +49,20 @@ class TestRechargeResource(ResourceTestCase):
                         "denomination": 10,
                         "product_code": "recharge",
                         "notes": "Grassroots Random Winner",
-                        "msisdn": 27821231231
+                        "msisdn": 27821231231,
+                        "recharge_project": "/api/v1/project/1/"
                     },
                     {
                         "denomination": 50,
                         "product_code": "recharge",
                         "notes": "Grassroots Random Winner 2",
-                        "msisdn": 27821231232
+                        "msisdn": 27821231232,
+                        "recharge_project": "/api/v1/project/1/"
                     }
                 ]
                 }
 
-        self.api_client.patch(url_recharge,
+        self.api_client.patch("%s?username=g&api_key=api_key" % url_recharge,
                               format="json",
                               data=data)
 
