@@ -20,3 +20,4 @@ BeautifulSoup
 mechanize
 django-tastypie<0.10.0
 requests
+django-admin-tools
