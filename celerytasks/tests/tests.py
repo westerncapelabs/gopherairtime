@@ -6,7 +6,9 @@ import json
 import random
 from recharge.models import Recharge, RechargeError
 from celerytasks.models import StoreToken
-from celerytasks.tasks import run_queries, hotsocket_login, get_recharge, balance_query, balance_checker
+from celerytasks.tasks import (run_queries, hotsocket_login, get_recharge,
+                               balance_query, balance_checker, send_kato_im_threshold_warning,
+                               send_pushover_threshold_warning)
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
@@ -272,3 +274,9 @@ class TestBalanceQuery(TestCase):
         account = GopherAirtimeAccount.objects.all()
         self.assertEqual(type(account[0].running_balance), type(1))
         self.assertIsNotNone(account[0].created_at)
+
+    # def test_kato_im(self):
+    #     send_kato_im_threshold_warning.delay(110)
+
+    # def test_pushover(self):
+    #     send_pushover_threshold_warning.delay(110)
