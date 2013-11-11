@@ -101,8 +101,8 @@ SECRET_KEY = 'please-change-me'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
+    'django.template.loaders.filesystem.Loader',
 #     'django.template.loaders.eggs.Loader',
 )
 
@@ -115,6 +115,15 @@ MIDDLEWARE_CLASSES = (
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.contrib.messages.context_processors.messages",
+    "django.core.context_processors.request",
+    )
 
 ROOT_URLCONF = 'gopherairtime.urls'
 
@@ -129,13 +138,25 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
+    # Admin Tools
+    # 'grappelli',
+    # 'grappelli.dashboard',
+    # 'admintools_bootstrap',
+    'admin_tools',
+    'admin_tools.theming',
+    'admin_tools.menu',
+    'admin_tools.dashboard',
+
+
+    # Django
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.admin',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'south',
@@ -149,7 +170,7 @@ INSTALLED_APPS = (
     'recharge',
     'celerytasks',
     'tastypie',
-    'kombu.transport.django'
+    'kombu.transport.django',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -244,3 +265,29 @@ CELERYBEAT_SCHEDULE = {
 }
 
 from api_settings import *
+
+
+# DJANGO ADMIN Tools
+ADMIN_TOOLS_MENU = 'gopherairtime.menu.CustomMenu'
+ADMIN_TOOLS_INDEX_DASHBOARD = 'gopherairtime.dashboard.CustomIndexDashboard'
+ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'gopherairtime.dashboard.CustomAppIndexDashboard'
+
+# ADMIN_TOOLS_MENU = 'fluent_dashboard.menu.FluentMenu'
+# ADMIN_TOOLS_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentIndexDashboard'
+# ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentAppIndexDashboard'
+
+# GRAPPELLI_ADMIN_TITLE = "GOPHER AIRTIME"
+
+# FLUENT_DASHBOARD_ICON_THEME = 'oxygen'
+
+# FLUENT_DASHBOARD_APP_ICONS = {
+#     'cms/page': 'internet-web-browser.png',
+#     'auth/user':  'system-users.png',
+#     'auth/group': 'resource-group.png',
+#     'sites/site': 'applications-internet.png',
+#     'google_analytics/analytics': 'view-statistics.png',
+#     'registration/registrationprofile': 'list-add-user.png'
+#     # ...
+# }
+
+# FLUENT_DASHBOARD_DEFAULT_MODULE = 'admin_tools.dashboard.modules.AppList'
