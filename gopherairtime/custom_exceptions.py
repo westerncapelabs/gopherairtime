@@ -5,7 +5,7 @@ class SentryException(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-        super(RechargeException, self).__init__(msg)
+        super(SentryException, self).__init__(msg)
 
 
 class RechargeException(Exception):
