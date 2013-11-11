@@ -1,5 +1,6 @@
 # Python
 import datetime
+import json
 
 # Django
 from django.template.loader import get_template
@@ -115,6 +116,8 @@ def balance_query(data):
 def low_balance_warning(balance):
 	logger.info("Running the low balance warning notifier")
 	send_threshold_warning_email.delay(balance)
+	send_kato_im_threshold_warning.delay(balance)
+	send_pushover_threshold_warning.delay(balance)
 
 
 # Mandrill email
@@ -128,6 +131,28 @@ def send_threshold_warning_email(balance):
 	text = get_template("email/email_threshold_notify.txt").render(Context(context_email))
 	send_mandrill_email(html, text, subject, [{"email": email}])
 
+
+# Kato IM
+@task
+def send_kato_im_threshold_warning(balance):
+	logger.info("Notifying low balance by kato")
+	headers = {'content-type': 'application/json'}
+	data = {"from": "GopherAirtime",
+			 "color": "red",
+			 "renderer": "markdown",
+			 "text": "Balance is currently: %s" % balance}
+	response = requests.post("https://api.kato.im/rooms/%s/simple" % settings.KATO_KEY,
+	                         data=json.dumps(data),
+	                         headers=headers)
+
+# PUSHOVER
+@task
+def send_pushover_threshold_warning(balance):
+	logger.info("Notifying low balance by pushover")
+	data = {"token": settings.PUSHOVER_APP,
+			"user": settings.PUSHOVER_USERS["mike"],
+			"message": "Balance is currently: %s" % balance}
+	response = requests.post(settings.PUSHOVER_MESSAGE_URL, data=data)
 
 # End Balance Checker Code
 # =============================================================================
