@@ -41,13 +41,15 @@ class RechargeResource(ModelResource):
                             "denomination": 10,  # In rcents
                             "product_code": "AIRTIME",
                             "notes": "Grassroots Random Winner",
-                            "msisdn": 27821231231
+                            "msisdn": 27821231231,
+                            "recharge_project": "/api/v1/project/1/"
                         },
                         {
                             "denomination": 50,
                             "product_code": "SMS",
                             "notes": "Grassroots Random Winner 2",
-                            "msisdn": 27821231232
+                            "msisdn": 27821231232,
+                            "recharge_project": "/api/v1/project/1/"
                         }
                     ]
                 }

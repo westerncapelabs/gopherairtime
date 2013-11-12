@@ -13,7 +13,7 @@ def abspath(*args):
     """convert relative paths to absolute paths relative to PROJECT_ROOT"""
     return os.path.join(PROJECT_ROOT, *args)
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -36,7 +36,7 @@ DATABASES = {
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost','127.0.0.1']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -74,7 +74,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = abspath('static')
+STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -85,6 +85,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    abspath('static'),
 )
 
 # List of finder classes that know how to find static files in
@@ -123,7 +124,11 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.static",
     "django.contrib.messages.context_processors.messages",
     "django.core.context_processors.request",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
     )
+
 
 ROOT_URLCONF = 'gopherairtime.urls'
 
@@ -165,6 +170,8 @@ INSTALLED_APPS = (
     'celerytasks',
     'tastypie',
     'kombu.transport.django',
+    'registration',
+    'frontend',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -256,6 +263,11 @@ CELERYBEAT_SCHEDULE = {
         'task': 'celerytasks.tasks.run_queries',
         'schedule': timedelta(seconds=60),
     },
+
+    'run-balance-queries-60-minutes': {
+        'task': 'celerytasks.tasks.balance_checker',
+        'schedule': timedelta(minutes=60),
+    },
 }
 
 from api_settings import *
@@ -263,3 +275,52 @@ from api_settings import *
 GRAPPELLI_INDEX_DASHBOARD = 'gopherairtime.grappelli_dashboard.CustomIndexDashboard'
 
 GRAPPELLI_ADMIN_TITLE = "GOPHER AIRTIME"
+
+# DJANGO registration
+ACCOUNT_ACTIVATION_DAYS = 7  # In days
+
+if DEBUG:
+    INTERNAL_IPS = ('127.0.0.1', 'localhost', '::1')
+
+    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+    DEBUG_TOOLBAR_PANELS = (
+        'debug_toolbar.panels.version.VersionDebugPanel',
+        'debug_toolbar.panels.timer.TimerDebugPanel',
+        'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
+        'debug_toolbar.panels.headers.HeaderDebugPanel',
+        'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
+        'debug_toolbar.panels.template.TemplateDebugPanel',
+        'debug_toolbar.panels.sql.SQLDebugPanel',
+        'debug_toolbar.panels.signals.SignalDebugPanel',
+        'debug_toolbar.panels.logger.LoggingPanel',
+    )
+
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+        'ENABLE_STACKTRACES': True,
+    }
+
+# Set this to the appropriate values
+ADMIN_EMAIL = {
+    "threshold_limit": "mike+gopher_sentry@westerncapelabs.com",
+    "from_gopher": "mike+from_gopher@westerncapelabs.com"
+    }
+
+
+MANDRILL_KEY = ""
+
+
+# PUSHOVER STUFF
+PUSHOVER_APP = ""
+PUSHOVER_USERS = {"mike": ""}
+PUSHOVER_BASE_URL = "https://api.pushover.net/1/"
+PUSHOVER_MESSAGE_URL = PUSHOVER_BASE_URL + "messages.json"
+
+KATO_KEY = ""
+
+
+# ======================================================
+    # VUMIGO SMS SENDER CONFIG
+# ======================================================
+SMS_CONFIG = {"sender_type": "logging"}
+VUMIGO_API_URL = ""

@@ -10,6 +10,9 @@ class Project(models.Model):
     name = models.CharField(max_length=30)
     budget = models.IntegerField(null=True, blank=True)
     recharge_limit = models.IntegerField()
+    account_id = models.CharField(max_length=100)
+    conversation_id = models.CharField(max_length=100)
+    conversation_token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
@@ -17,3 +20,14 @@ class Project(models.Model):
 
     class Meta:
         verbose_name = "Project"
+
+
+class GopherAirtimeAccount(models.Model):
+    running_balance = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return "%s" % self.running_balance
+
+    class Meta:
+        verbose_name = "Gopher Airtime Account"

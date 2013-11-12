@@ -5,11 +5,11 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # url(r'^admin_tools/', include('admin_tools.urls')),  # Django admin tools
-
-    # Examples:
-    # url(r'^$', 'skeleton.views.home', name='home'),
+    # API URLS
     url(r'^', include('recharge.urls')),
+
+    # VIEWS URLS
+    url(r'^', include('frontend.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
@@ -19,4 +19,6 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
 
+    # Django Registration
+    (r'^accounts/', include('registration.backends.simple.urls')),
 )

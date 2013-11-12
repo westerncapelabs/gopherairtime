@@ -1,0 +1,5 @@
+The flickswitch balance is running low
+-----------------------------------------------------------
+
+The current running balance is : {{ balance }}.
+Please top up.
