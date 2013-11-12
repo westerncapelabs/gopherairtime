@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+    <div class="container">
+      {% include "render_messages.html" %}
+      <!-- Main component for a primary marketing message or call to action -->
+      <div class="jumbotron">
+        <h1>Welcome to Gopher Airtime</h1>
+        <p>Making Recharging airtime easier.</p>
+        <p>
+          {% if not user.is_authenticated %}
+            <a class="btn btn-lg btn-primary" href="{% url 'registration_register' %}">Register &raquo;</a>
+          {% endif %}
+
+        </p>
+      </div>
+
+    </div> <!-- /container -->
+{% endblock content %}
