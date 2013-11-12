@@ -26,8 +26,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'gopher',
-        'USER': 'mikej',
-        'PASSWORD': '',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -269,8 +269,6 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
-from api_settings import *
-
 GRAPPELLI_INDEX_DASHBOARD = 'gopherairtime.grappelli_dashboard.CustomIndexDashboard'
 
 GRAPPELLI_ADMIN_TITLE = "GOPHER AIRTIME"
@@ -323,3 +321,6 @@ KATO_KEY = ""
 # ======================================================
 SMS_CONFIG = {"sender_type": "logging"}
 VUMIGO_API_URL = ""
+
+from api_settings import *
+from production_settings import *
