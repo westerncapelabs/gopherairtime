@@ -21,6 +21,10 @@ class Recharge(models.Model):
     recharge_system_ref = models.BigIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status_confirmed_at = models.DateTimeField(null=True, blank=True)
+    notification = models.CharField(max_length=160,
+                                    null=True,
+                                    blank=True)
+    notification_sent = models.BooleanField()
     recharge_project = models.ForeignKey(Project,
                                          related_name='recharge_project')
 
