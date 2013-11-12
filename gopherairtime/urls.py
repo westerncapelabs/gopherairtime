@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     (r'^grappelli/', include('grappelli.urls')), # grappelli URLS
 
-    url(r'^admin/', include(admin.site.urls)),
+    (r'^admin/', include(admin.site.urls)),
 
     # Django Registration
     (r'^accounts/', include('registration.backends.simple.urls')),

@@ -18,3 +18,4 @@ pyflakes==0.7.3
 raven==3.5.0
 requests==2.0.0
 supervisor==3.0
+django-grappelli==2.4.7
