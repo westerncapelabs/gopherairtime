@@ -75,3 +75,11 @@
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+/* Removing <li> for errolist*/
+.errorlist li {
+  list-style: none;
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+}
