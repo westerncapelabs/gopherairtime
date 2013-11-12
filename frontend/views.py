@@ -47,6 +47,6 @@ class LoginUserView(FormView):
                 login(request, user)
                 messages.success(request, "You have been successfully logged in")
                 return redirect(reverse("frontend_home"))
-
-                messages.error(request, "The Email password combination does not exist", extra_tags="danger")
+            else:
+                messages.error(request, "The e-mail password combination does not exist", extra_tags="danger")
         return self.form_invalid(form)
