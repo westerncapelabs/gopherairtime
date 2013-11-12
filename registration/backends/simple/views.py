@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 
 from registration import signals
 from registration.views import RegistrationView as BaseRegistrationView
@@ -13,10 +14,13 @@ class RegistrationView(BaseRegistrationView):
     workflow: a user supplies a username, email address and password
     (the bare minimum for a useful account), and is immediately signed
     up and logged in).
-    
+
     """
     def register(self, request, **cleaned_data):
-        username, email, password = cleaned_data['username'], cleaned_data['email'], cleaned_data['password1']
+        # username, email, password = cleaned_data['username'], cleaned_data['email'], cleaned_data['password1']
+        email, password = cleaned_data['email'], cleaned_data['password1']
+        username = email
+
         User.objects.create_user(username, email, password)
 
         new_user = authenticate(username=username, password=password)
@@ -37,9 +41,10 @@ class RegistrationView(BaseRegistrationView):
 
         * If ``REGISTRATION_OPEN`` is both specified and set to
           ``False``, registration is not permitted.
-        
+
         """
         return getattr(settings, 'REGISTRATION_OPEN', True)
 
     def get_success_url(self, request, user):
-        return (user.get_absolute_url(), (), {})
+        # return (user.get_absolute_url(), (), {})
+        return reverse("frontend_home")
