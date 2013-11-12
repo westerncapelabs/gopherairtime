@@ -1,3 +1,13 @@
+class SentryException(Exception):
+    """
+    Adding SentryException class for extensebility
+    """
+    def __init__(self, msg):
+        self.msg = msg
+
+        super(SentryException, self).__init__(msg)
+
+
 class RechargeException(Exception):
     def __init__(self, msg):
         self.msg = msg

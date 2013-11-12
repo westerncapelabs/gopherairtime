@@ -241,9 +241,32 @@ CELERYBEAT_SCHEDULE = {
         'task': 'celerytasks.tasks.run_queries',
         'schedule': timedelta(seconds=60),
     },
+
+    'run-balance-queries-60-minutes': {
+        'task': 'celerytasks.tasks.balance_checker',
+        'schedule': timedelta(minutes=60),
+    },
 }
 
 from api_settings import *
+
+# Set this to the appropriate values
+ADMIN_EMAIL = {
+    "threshold_limit": "mike+gopher_sentry@westerncapelabs.com",
+    "from_gopher": "mike+from_gopher@westerncapelabs.com"
+    }
+
+
+MANDRILL_KEY = ""
+
+
+# PUSHOVER STUFF
+PUSHOVER_APP = ""
+PUSHOVER_USERS = {"mike": ""}
+PUSHOVER_BASE_URL = "https://api.pushover.net/1/"
+PUSHOVER_MESSAGE_URL = PUSHOVER_BASE_URL + "messages.json"
+
+KATO_KEY = ""
 
 
 # ======================================================
@@ -251,3 +274,4 @@ from api_settings import *
 # ======================================================
 SMS_CONFIG = {"sender_type": "logging"}
 VUMIGO_API_URL = ""
+

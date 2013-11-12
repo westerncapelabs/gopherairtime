@@ -20,3 +20,14 @@ class Project(models.Model):
 
     class Meta:
         verbose_name = "Project"
+
+
+class GopherAirtimeAccount(models.Model):
+    running_balance = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return "%s" % self.running_balance
+
+    class Meta:
+        verbose_name = "Gopher Airtime Account"

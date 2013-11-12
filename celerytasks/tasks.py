@@ -1,17 +1,31 @@
-from celery.decorators import task
-from celery.utils.log import get_task_logger
-from recharge.models import Recharge, RechargeError, RechargeFailed
-from celerytasks.models import StoreToken
-from django.conf import settings
-import requests
+# Python
 import datetime
+import json
+
+# Django
+from django.template.loader import get_template
+from django.template import Context
 from django.utils import timezone
+from django.conf import settings
+
+# Project
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
-                                             NonNumericReferenceError)
+                                             NonNumericReferenceError, SentryException)
+from recharge.models import Recharge, RechargeError, RechargeFailed
+from libs.shareddefs import send_mandrill_email
+from users.models import GopherAirtimeAccount
+from celerytasks.models import StoreToken
 from celerytasks.sms_sender import VumiGoSender
+
+# Celery
+from celery.utils.log import get_task_logger
+from celery.decorators import task
+
+# Third Party
+import requests
 
 
 logger = get_task_logger(__name__)
@@ -47,6 +61,108 @@ def hotsocket_login():
 			query.save()
 
 
+# =============================================================================
+#	Balance Checker Code
+# =============================================================================
+@task
+def balance_checker():
+	# Try get the stored token if not there
+	logger.info("Performing balance query")
+	try:
+		store_token = StoreToken.objects.get(id=1)
+		data = {"username": settings.HOTSOCKET_USERNAME,
+				"token": store_token.token,
+				"as_json": True}
+		balance_query.delay(data)
+
+	# If it is the first time its running do the hotsocket login again
+	except StoreToken.DoesNotExist, exc:
+		logger.warning("Store token not valid, trying hotsocket login again")
+		# If the hotsocket_login is ready run balance checker again.
+		if hotsocket_login.delay().ready():
+			balance_checker.retry(exc=exc)
+
+@task
+def balance_query(data):
+	code = settings.HOTSOCKET_CODES
+	url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["balance"])
+	try:
+		response = requests.post(url, data=data)
+		json_response = response.json()
+		status = json_response["response"]["status"]
+		message = json_response["response"]["message"]
+
+		if str(status) == code["SUCCESS"]["status"]:
+			# if status =="0000" storing updating the balance
+			balance = json_response["response"]["running_balance"]
+			account = GopherAirtimeAccount(running_balance=balance)
+			account.save()
+
+			# Checking if balance is below threshold
+			if balance < settings.THRESHOLD_WARNING_LEVEL:
+				low_balance_warning.delay(balance)
+		else:
+			# If status != "0000": raise sentry error
+			raise SentryException("Checking balance failed with"
+			                	  "flickswitch status code %s and message %s "
+			                	  % (status, message))
+
+
+	except (TokenInvalidError, TokenExpireError), exc:
+		if hotsocket_login.delay().ready():
+			balance_query.retry(exc=exc)
+
+
+@task
+def low_balance_warning(balance):
+	logger.info("Running the low balance warning notifier")
+	send_email_threshold_warning.delay(balance)
+	send_kato_im_threshold_warning.delay(balance)
+	send_pushover_threshold_warning.delay(balance)
+
+
+# Mandrill email
+@task
+def send_email_threshold_warning(balance):
+	logger.info("Notifying low balance by e-mail")
+	context_email = {"balance": balance}
+	subject = "Balance Running Low"
+	email = settings.ADMIN_EMAIL["threshold_limit"]
+	html = get_template("email/email_threshold_notify.html").render(Context(context_email))
+	text = get_template("email/email_threshold_notify.txt").render(Context(context_email))
+	send_mandrill_email(html, text, subject, [{"email": email}])
+
+
+# Kato IM
+@task
+def send_kato_im_threshold_warning(balance):
+	logger.info("Notifying low balance by kato")
+	headers = {'content-type': 'application/json'}
+	data = {"from": "GopherAirtime",
+			 "color": "red",
+			 "renderer": "markdown",
+			 "text": "Balance is currently: %s" % balance}
+	response = requests.post("https://api.kato.im/rooms/%s/simple" % settings.KATO_KEY,
+	                         data=json.dumps(data),
+	                         headers=headers)
+
+# PUSHOVER
+@task
+def send_pushover_threshold_warning(balance):
+	logger.info("Notifying low balance by pushover")
+	data = {"token": settings.PUSHOVER_APP,
+			"user": settings.PUSHOVER_USERS["mike"],
+			"message": "Balance is currently: %s" % balance}
+	response = requests.post(settings.PUSHOVER_MESSAGE_URL, data=data)
+
+# End Balance Checker Code
+# =============================================================================
+
+
+# =============================================================================
+#	Running Recharge and Status Query
+# =============================================================================
+
 @task
 def run_queries():
 	"""
@@ -65,11 +181,16 @@ def recharge_query():
 	"""
 	error_list = []
 	try:
+		# Storing the recharge token in the database
 		store_token = StoreToken.objects.get(id=1)
+		# Getting recharges where the status is none
 		queryset = Recharge.objects.filter(status=None).all()
 		for query in queryset:
+			# Checking if the limit has been exceeded
 			limit = query.recharge_project.recharge_limit
 			if query.denomination > limit:
+				# if limit exceeded add to logger and error list, add to error_list and skip
+				# entry
 				logger.error("Recharge limit exceeded for %s", query.msisdn)
 				error_list.append(query.id)
 				continue
@@ -82,17 +203,20 @@ def recharge_query():
 					"network_code": query_network(query.msisdn),
 					"reference": query.reference,
 					"as_json": True}
+			# seting the status to -1 to indicate that the task is already running,
+			# used to prevent task from re-running
 			query.status = -1
 			query.save()
 			get_recharge.delay(data, query.id)
 
-
+	# If it is the first time its running do the hotsocket login again
 	except StoreToken.DoesNotExist, exc:
 		hotsocket_login.delay()
 		recharge_query.retry(countdown=20, exc=exc)
 
 	finally:
 		# The threshhold exceeded error is 404
+		# Getting all the error_ids and storing it in the database.
 		if error_list:
 			for _id in error_list:
 				error = RechargeError(error_id=settings.INTERNAL_ERROR["LIMIT_REACHED"]["status"],
@@ -219,6 +343,12 @@ def check_recharge_status(data, query_id):
 				query.save()
 
 				if int(recharge_status_code) == 3:
+
+					# Updating the account balance after each query
+					balance = json_response["response"]["running_balance"]
+					account = GopherAirtimeAccount(running_balance=balance)
+					account.save()
+					# Notify the recipient via SMS
 					if query.notification:
 						send_sms.delay(query.msisdn,
 						               query.notification,
@@ -227,6 +357,7 @@ def check_recharge_status(data, query_id):
 						               query.recharge_project.conversation_token)
 						query.notification_sent = True
 						query.save()
+
 
 			elif status == code["TOKEN_EXPIRE"]["status"]:
 				raise TokenExpireError(message)
@@ -292,6 +423,9 @@ def query_network(msisdn):
         if str(msisdn).startswith(prefix):
             return op
     return None
+
+#	Recharge and status query end
+# =============================================================================
 
 
 # ==========================================================

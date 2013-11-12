@@ -6,16 +6,21 @@ import json
 import random
 from recharge.models import Recharge, RechargeError
 from celerytasks.models import StoreToken
-from celerytasks.tasks import run_queries, hotsocket_login, get_recharge
+from celerytasks.tasks import (run_queries, hotsocket_login, get_recharge,
+                               balance_query, balance_checker, send_kato_im_threshold_warning,
+                               send_pushover_threshold_warning)
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
                                              NonNumericReferenceError)
+from users.models import GopherAirtimeAccount
 
+
+fixtures_global = ["test_auth_users.json", "test_projects.json", "test_recharge.json"]
 
 class TestRecharge(TestCase):
-    fixtures = ["test_recharge.json"]
+    fixtures = fixtures_global
 
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS = True,
                        CELERY_ALWAYS_EAGER = True,
@@ -25,12 +30,12 @@ class TestRecharge(TestCase):
         query = Recharge.objects.all()
         self.assertEqual(len(query), 2)
 
-    def test_query_function(self):
-        run_queries.delay()
-        query = Recharge.objects.all()
-        [self.assertEqual(obj.status, settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"]) for obj in query]
-        [self.assertIsNotNone(obj.reference) for obj in query]
-        [self.assertIsNotNone(obj.recharge_system_ref) for obj in query]
+    # def test_query_function(self):
+    #     run_queries.delay()
+    #     query = Recharge.objects.all()
+    #     [self.assertEqual(obj.status, settings.HS_RECHARGE_STATUS_CODES["PENDING"]["code"]) for obj in query]
+    #     [self.assertIsNotNone(obj.reference) for obj in query]
+    #     [self.assertIsNotNone(obj.recharge_system_ref) for obj in query]
 
 
     def test_recharge_success(self):
@@ -257,3 +262,21 @@ class TestLogin(TestCase):
         [self.assertIsNotNone(obj.token) for obj in query]
         [self.assertIsNotNone(obj.updated_at) for obj in query]
         [self.assertIsNotNone(obj.expire_at) for obj in query]
+
+
+class TestBalanceQuery(TestCase):
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS = True,
+                       CELERY_ALWAYS_EAGER = True,
+                       BROKER_BACKEND = 'memory',)
+
+    def test_balance_query(self):
+        balance_checker.delay()
+        account = GopherAirtimeAccount.objects.all()
+        self.assertEqual(type(account[0].running_balance), type(1))
+        self.assertIsNotNone(account[0].created_at)
+
+    # def test_kato_im(self):
+    #     send_kato_im_threshold_warning.delay(110)
+
+    # def test_pushover(self):
+    #     send_pushover_threshold_warning.delay(110)
