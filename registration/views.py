@@ -6,6 +6,8 @@ Views which allow users to create and activate accounts.
 from django.shortcuts import redirect
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
+from django.contrib.auth.models import User
+from django.contrib import messages
 
 from registration import signals
 from registration.forms import RegistrationForm
@@ -16,7 +18,7 @@ class _RequestPassingFormView(FormView):
     A version of FormView which passes extra arguments to certain
     methods, notably passing the HTTP request nearly everywhere, to
     enable finer-grained processing.
-    
+
     """
     def get(self, request, *args, **kwargs):
         # Pass request to get_form_class and get_form for per-request
@@ -32,6 +34,9 @@ class _RequestPassingFormView(FormView):
         form = self.get_form(form_class)
         if form.is_valid():
             # Pass request to form_valid.
+            if User.objects.filter(username=form.cleaned_data["email"]).exists():
+                messages.error(request, "The username already exists", extra_tags="danger")
+                return self.form_invalid(form)
             return self.form_valid(request, form)
         else:
             return self.form_invalid(form)
@@ -60,7 +65,7 @@ class _RequestPassingFormView(FormView):
 class RegistrationView(_RequestPassingFormView):
     """
     Base class for user registration views.
-    
+
     """
     disallowed_url = 'registration_disallowed'
     form_class = RegistrationForm
@@ -72,7 +77,7 @@ class RegistrationView(_RequestPassingFormView):
         """
         Check that user signup is allowed before even bothering to
         dispatch or do other processing.
-        
+
         """
         if not self.registration_allowed(request):
             return redirect(self.disallowed_url)
@@ -81,7 +86,7 @@ class RegistrationView(_RequestPassingFormView):
     def form_valid(self, request, form):
         new_user = self.register(request, **form.cleaned_data)
         success_url = self.get_success_url(request, new_user)
-        
+
         # success_url may be a simple string, or a tuple providing the
         # full argument set for redirect(). Attempting to unpack it
         # tells us which one it is.
@@ -95,7 +100,7 @@ class RegistrationView(_RequestPassingFormView):
         """
         Override this to enable/disable user registration, either
         globally or on a per-request basis.
-        
+
         """
         return True
 
@@ -104,15 +109,15 @@ class RegistrationView(_RequestPassingFormView):
         Implement user-registration logic here. Access to both the
         request and the full cleaned_data of the registration form is
         available here.
-        
+
         """
         raise NotImplementedError
-                
+
 
 class ActivationView(TemplateView):
     """
     Base class for user activation views.
-    
+
     """
     http_method_names = ['get']
     template_name = 'registration/activate.html'
@@ -134,7 +139,7 @@ class ActivationView(TemplateView):
     def activate(self, request, *args, **kwargs):
         """
         Implement account-activation logic here.
-        
+
         """
         raise NotImplementedError
 
