@@ -139,14 +139,8 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
     # Admin Tools
-    # 'grappelli',
-    # 'grappelli.dashboard',
-    # 'admintools_bootstrap',
-    'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
-
+    'grappelli.dashboard',
+    'grappelli',
 
     # Django
     'django.contrib.admin',
@@ -266,28 +260,6 @@ CELERYBEAT_SCHEDULE = {
 
 from api_settings import *
 
+GRAPPELLI_INDEX_DASHBOARD = 'gopherairtime.grappelli_dashboard.CustomIndexDashboard'
 
-# DJANGO ADMIN Tools
-ADMIN_TOOLS_MENU = 'gopherairtime.menu.CustomMenu'
-ADMIN_TOOLS_INDEX_DASHBOARD = 'gopherairtime.dashboard.CustomIndexDashboard'
-ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'gopherairtime.dashboard.CustomAppIndexDashboard'
-
-# ADMIN_TOOLS_MENU = 'fluent_dashboard.menu.FluentMenu'
-# ADMIN_TOOLS_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentIndexDashboard'
-# ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentAppIndexDashboard'
-
-# GRAPPELLI_ADMIN_TITLE = "GOPHER AIRTIME"
-
-# FLUENT_DASHBOARD_ICON_THEME = 'oxygen'
-
-# FLUENT_DASHBOARD_APP_ICONS = {
-#     'cms/page': 'internet-web-browser.png',
-#     'auth/user':  'system-users.png',
-#     'auth/group': 'resource-group.png',
-#     'sites/site': 'applications-internet.png',
-#     'google_analytics/analytics': 'view-statistics.png',
-#     'registration/registrationprofile': 'list-add-user.png'
-#     # ...
-# }
-
-# FLUENT_DASHBOARD_DEFAULT_MODULE = 'admin_tools.dashboard.modules.AppList'
+GRAPPELLI_ADMIN_TITLE = "GOPHER AIRTIME"
