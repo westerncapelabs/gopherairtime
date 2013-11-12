@@ -24,8 +24,10 @@ def hotsocket_login():
 			}
 
 	url = "%s%s" % (settings.HOTSOCKET_BASE, settings.HOTSOCKET_RESOURCES["login"])
+	logger.info("Running hotsocket login")
 	response = requests.post(url, data=data)
 	json_response = response.json()
+	logger.info("Hotsocket login result: %s" % json_response["response"]["status"])
 
 	if str(json_response["response"]["status"]) == "0000":
 		# Assuming the token will always be at primary key one
@@ -113,7 +115,7 @@ def status_query():
 	logger.info("Running status query")
 	try:
 		store_token = StoreToken.objects.get(id=1)
-		queryset = Recharge.objects.filter(status=0).all()
+		queryset = Recharge.objects.filter(status=1).all()
 		for query in queryset:
 			data = {"username": settings.HOTSOCKET_USERNAME,
 					"token": store_token.token,
@@ -210,6 +212,11 @@ def check_recharge_status(data, query_id):
 			status = json_response["response"]["status"]
 			message = json_response["response"]["message"]
 			recharge_status_code = json_response["response"]["recharge_status_cd"]
+
+			logger.info("Response for %s" % query_id)
+			logger.info("Status: %s" % status)
+			logger.info("Message: %s" % message)
+			logger.info("Recharge status code: %s" % recharge_status_code)
 
 			if str(status) == str(code["SUCCESS"]["status"]):
 				query.status = int(recharge_status_code)
