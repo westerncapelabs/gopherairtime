@@ -36,3 +36,5 @@ nosetests.xml
 /ve/
 logs/*.log
 *.pid
+
+gopherairtime/static/*
