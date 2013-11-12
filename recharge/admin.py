@@ -3,7 +3,8 @@ from recharge.models import Recharge, RechargeError, RechargeFailed
 
 
 class RechargeAdmin(admin.ModelAdmin):
-    list_display = ["id", "msisdn", "reference", "status", "recharge_system_ref", "status_confirmed_at"]
+    list_display = ["id", "msisdn", "reference", "status", "recharge_system_ref",
+                    "notification", "notification_sent", "status_confirmed_at"]
 
 
 class RechargeErrorAdmin(admin.ModelAdmin):

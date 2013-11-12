@@ -18,6 +18,7 @@ from recharge.models import Recharge, RechargeError, RechargeFailed
 from libs.shareddefs import send_mandrill_email
 from users.models import GopherAirtimeAccount
 from celerytasks.models import StoreToken
+from celerytasks.sms_sender import VumiGoSender
 
 # Celery
 from celery.utils.log import get_task_logger
@@ -342,10 +343,21 @@ def check_recharge_status(data, query_id):
 				query.save()
 
 				if int(recharge_status_code) == 3:
+
 					# Updating the account balance after each query
 					balance = json_response["response"]["running_balance"]
 					account = GopherAirtimeAccount(running_balance=balance)
 					account.save()
+					# Notify the recipient via SMS
+					if query.notification:
+						send_sms.delay(query.msisdn,
+						               query.notification,
+						               query.recharge_project.account_id,
+						               query.recharge_project.conversation_id,
+						               query.recharge_project.conversation_token)
+						query.notification_sent = True
+						query.save()
+
 
 			elif status == code["TOKEN_EXPIRE"]["status"]:
 				raise TokenExpireError(message)
@@ -414,3 +426,15 @@ def query_network(msisdn):
 
 #	Recharge and status query end
 # =============================================================================
+
+
+# ==========================================================
+	#  VumiGoSender
+# ==========================================================
+@task
+def send_sms(msisdn, sms, account_id, conversation_id, conversation_token):
+	sender = VumiGoSender(api_url=settings.VUMIGO_API_URL,
+	                   account_id=account_id,
+	                   conversation_id=conversation_id,
+	                   conversation_token=conversation_token)
+	sender.send_sms(msisdn, sms)
