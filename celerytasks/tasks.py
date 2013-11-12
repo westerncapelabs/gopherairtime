@@ -116,14 +116,14 @@ def balance_query(data):
 @task
 def low_balance_warning(balance):
 	logger.info("Running the low balance warning notifier")
-	send_threshold_warning_email.delay(balance)
+	send_email_threshold_warning.delay(balance)
 	send_kato_im_threshold_warning.delay(balance)
 	send_pushover_threshold_warning.delay(balance)
 
 
 # Mandrill email
 @task
-def send_threshold_warning_email(balance):
+def send_email_threshold_warning(balance):
 	logger.info("Notifying low balance by e-mail")
 	context_email = {"balance": balance}
 	subject = "Balance Running Low"
