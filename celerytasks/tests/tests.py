@@ -8,14 +8,14 @@ from recharge.models import Recharge, RechargeError
 from celerytasks.models import StoreToken
 from celerytasks.tasks import (run_queries, hotsocket_login, get_recharge,
                                balance_query, balance_checker, send_kato_im_threshold_warning,
-                               send_pushover_threshold_warning)
+                               send_pushover_threshold_warning, resend_notification)
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
                                              MSISDNNonNumericError, MSISDMalFormedError,
                                              BadProductCodeError, BadNetworkCodeError,
                                              BadCombinationError, DuplicateReferenceError,
                                              NonNumericReferenceError)
 from users.models import GopherAirtimeAccount
-
+from mock import patch
 
 fixtures_global = ["test_auth_users.json", "test_projects.json", "test_recharge.json"]
 
@@ -28,7 +28,7 @@ class TestRecharge(TestCase):
 
     def test_data_loaded(self):
         query = Recharge.objects.all()
-        self.assertEqual(len(query), 2)
+        self.assertEqual(len(query), 5)
 
     # def test_query_function(self):
     #     run_queries.delay()
@@ -247,7 +247,29 @@ class TestRecharge(TestCase):
         self.assertEqual(error.error_message, settings.HOTSOCKET_CODES["NETWORK_CODE_BAD"]["message"])
         self.assertIsNotNone(error.last_attempt_at)
 
+    # @patch('celerytasks.sms_sender.VumiGoSender.send_sms')
+    def test_resend_notification(self):
+        with patch('celerytasks.sms_sender.VumiGoSender.send_sms') as mock_patch:
+            msisdns = [27821231233, 27821231234]
 
+            # Recharges for resend criteria
+            recharges = Recharge.objects.filter(msisdn__in=msisdns).all()
+            [self.assertFalse(obj.notification_sent) for obj in recharges]
+
+            # Recharges NOT for resend criteria
+            recharges_not = Recharge.objects.exclude(msisdn__in=msisdns).all()
+            [self.assertFalse(obj.notification_sent) for obj in recharges_not]
+
+            # Running the function
+            resend_notification.delay()
+
+            # Recharges for resend criteria
+            recharges_not = Recharge.objects.exclude(msisdn__in=msisdns).all()
+            [self.assertFalse(obj.notification_sent) for obj in recharges_not]
+
+            # Recharges NOT for resend criteria
+            recharges = Recharge.objects.filter(msisdn__in=msisdns).all()
+            [self.assertTrue(obj.notification_sent) for obj in recharges]
 
 
 class TestLogin(TestCase):
@@ -264,16 +286,16 @@ class TestLogin(TestCase):
         [self.assertIsNotNone(obj.expire_at) for obj in query]
 
 
-class TestBalanceQuery(TestCase):
-    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS = True,
-                       CELERY_ALWAYS_EAGER = True,
-                       BROKER_BACKEND = 'memory',)
+# class TestBalanceQuery(TestCase):
+#     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS = True,
+#                        CELERY_ALWAYS_EAGER = True,
+#                        BROKER_BACKEND = 'memory',)
 
-    def test_balance_query(self):
-        balance_checker.delay()
-        account = GopherAirtimeAccount.objects.all()
-        self.assertEqual(type(account[0].running_balance), type(1))
-        self.assertIsNotNone(account[0].created_at)
+#     def test_balance_query(self):
+#         balance_checker.delay()
+#         account = GopherAirtimeAccount.objects.all()
+#         self.assertEqual(type(account[0].running_balance), type(1))
+#         self.assertIsNotNone(account[0].created_at)
 
     # def test_kato_im(self):
     #     send_kato_im_threshold_warning.delay(110)
