@@ -45,8 +45,8 @@ class VumiGoSender(SmsSender):
     def send_sms(self, to_addr, content):
         headers = {'content-type': 'application/json; charset=utf-8'}
         payload = {
-            "content": content,
-            "to_addr": to_addr,
+            "content": unicode(content),
+            "to_addr": unicode(to_addr),
         }
         response = requests.put(self._api_url(), auth=(self.account_id, self.conversation_token), headers=headers,
                                 data=json.dumps(payload))
