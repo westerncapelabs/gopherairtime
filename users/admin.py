@@ -14,7 +14,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 class GopherAirtimeAccountAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['running_balance', 'created_at']
 
 
 admin.site.register(Project, ProjectAdmin)
