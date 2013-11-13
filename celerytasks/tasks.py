@@ -7,6 +7,7 @@ from django.template.loader import get_template
 from django.template import Context
 from django.utils import timezone
 from django.conf import settings
+from django.db.models import Q
 
 # Project
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
@@ -172,6 +173,7 @@ def run_queries():
 	recharge_query.delay()
 	status_query.delay()
 	errors_query.delay()
+	resend_notification.delay()
 
 
 @task
@@ -423,6 +425,24 @@ def query_network(msisdn):
         if str(msisdn).startswith(prefix):
             return op
     return None
+
+
+@task
+def resend_notification():
+	queryset = (Recharge.objects.
+	            exclude(notification__isnull=True).
+	            exclude(notification__exact='').
+	            filter(status=3).
+	            filter(Q(notification_sent=None) | Q(notification_sent=False)).all())
+
+	for query in queryset:
+		send_sms.delay(query.msisdn,
+		               query.notification,
+		               query.recharge_project.account_id,
+		               query.recharge_project.conversation_id,
+		               query.recharge_project.conversation_token)
+		query.notification_sent = True
+		query.save()
 
 #	Recharge and status query end
 # =============================================================================
