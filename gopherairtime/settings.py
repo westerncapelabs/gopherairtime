@@ -91,7 +91,7 @@ STATICFILES_DIRS = (
 # various locations.
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django.contrib.staticfiles.finders.FileSystemFinder',    
+    'django.contrib.staticfiles.finders.FileSystemFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
@@ -323,4 +323,8 @@ SMS_CONFIG = {"sender_type": "logging"}
 VUMIGO_API_URL = ""
 
 from api_settings import *
-from production_settings import *
+
+try:
+    from production_settings import *
+except ImportError:
+    pass
