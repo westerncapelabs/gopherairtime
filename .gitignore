@@ -37,4 +37,5 @@ nosetests.xml
 logs/*.log
 *.pid
 
-gopherairtime/static/*
+gopherairtime/static/admin/*
+gopherairtime/static/grappelli/*
