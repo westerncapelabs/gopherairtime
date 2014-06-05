@@ -30,7 +30,7 @@ DATABASES = {
 SECRET_KEY = 'please-change-me'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = ['localhost','127.0.0.1']
