@@ -22,3 +22,4 @@ urlpatterns = patterns('',
     # Django Registration
     (r'^accounts/', include('registration.backends.simple.urls')),
 )
+
