@@ -27,6 +27,7 @@ from celery.decorators import task
 
 # Third Party
 import requests
+import csv
 
 
 logger = get_task_logger(__name__)
@@ -443,6 +444,19 @@ def resend_notification():
 		               query.recharge_project.conversation_token)
 		query.notification_sent = True
 		query.save()
+
+
+@task
+def ingest_csv(csv_data, project):
+	records = csv.reader(csv_data, delimiter=',', quotechar='"')
+	for line in records:
+		recharge = Recharge()
+		recharge.msisdn = line[0]
+		recharge.denomination = line[1]
+		recharge.notification = line[2]
+		recharge.notes = line[3]
+		recharge.recharge_project = project
+		recharge.save()
 
 #	Recharge and status query end
 # =============================================================================

@@ -37,8 +37,8 @@ ALLOWED_HOSTS = ['localhost','127.0.0.1']
 
 INSTALLED_APPS = (
     # Admin Tools
-    'grappelli.dashboard',
-    'grappelli',
+    # 'grappelli.dashboard',
+    # 'grappelli',
 
     # Django
     'django.contrib.admin',

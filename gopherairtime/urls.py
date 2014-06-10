@@ -15,9 +15,10 @@ urlpatterns = patterns('',
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    (r'^grappelli/', include('grappelli.urls')), # grappelli URLS
+    # (r'^grappelli/', include('grappelli.urls')), # grappelli URLS
 
     (r'^admin/', include(admin.site.urls)),
+    (r'^admin/recharge/upload/', 'recharge.views.uploader'),
 
     # Django Registration
     (r'^accounts/', include('registration.backends.simple.urls')),
