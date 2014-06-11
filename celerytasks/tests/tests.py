@@ -26,7 +26,7 @@ from django.utils.timezone import utc
 from StringIO import StringIO
 from datetime import datetime
 
-from celery_app.tasks import ingest_csv
+from celerytasks.tasks import ingest_csv
 from users.models import Project
 
 
@@ -43,9 +43,15 @@ class TestUploadCSV(TestCase):
     # LINE_CLEAN_2 = ("2014-02-17,yemi,ade,2322222222222,ng,user2@eskimi.com\r\n")
     # LINE_DIRTY_1 = ("2014-02-17,yemi,ade\r\n")
 
-    # fixtures = ["project.json", "metricsummary.json"]
+    # fixtures = ["user.json", "project.json"]
+    fixtures = ["project.json"]
+
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            'test', 'test@example.com', "pass123")
 
     def test_upload_clean(self):
+        # print Project.objects.all()
         project = Project.objects.get(name="Tester Project")
         clean_sample =  self.HEADER + self.LINE_CLEAN_1 + self.LINE_CLEAN_2 + self.LINE_CLEAN_3
         uploaded = StringIO(clean_sample)
