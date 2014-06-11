@@ -8,6 +8,7 @@ from django.template import Context
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q
+from django.db import IntegrityError
 
 # Project
 from gopherairtime.custom_exceptions import (TokenInvalidError, TokenExpireError,
@@ -448,15 +449,22 @@ def resend_notification():
 
 @task
 def ingest_csv(csv_data, project):
-	records = csv.reader(csv_data, delimiter=',', quotechar='"')
+	# gsvr: records = csv.reader(csv_data, delimiter=',', quotechar='"')
+	records = csv.DictReader(csv_data)
 	for line in records:
-		recharge = Recharge()
-		recharge.msisdn = line[0]
-		recharge.denomination = line[1]
-		recharge.notification = line[2]
-		recharge.notes = line[3]
-		recharge.recharge_project = project
-		recharge.save()
+		try:
+			recharge = Recharge()
+			recharge.msisdn = line["Msisdn"]
+			recharge.product_code = "airtime"
+			recharge.denomination = line["Denomination"] # gsvr: make sure this is Null in tests if no entry
+			recharge.notification = line["Notification"]
+			recharge.notes = line["Notes"]
+			recharge.recharge_project = project
+			recharge.save()
+		except IntegrityError as e:
+			recharge = None
+			logger.error(e)
+
 
 #	Recharge and status query end
 # =============================================================================

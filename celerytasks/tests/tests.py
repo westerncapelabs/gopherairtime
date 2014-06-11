@@ -19,6 +19,62 @@ from mock import patch
 
 fixtures_global = ["test_auth_users.json", "test_projects.json", "test_recharge.json"]
 
+
+
+from django.contrib.auth.models import User
+from django.utils.timezone import utc
+from StringIO import StringIO
+from datetime import datetime
+
+from celery_app.tasks import ingest_csv
+from users.models import Project
+
+
+class TestUploadCSV(TestCase):
+    HEADER = ("Msisdn,Denomination,Notification,Notes")
+    LINE_CLEAN_1 = ("082123,100,Monies!,Bleeding Chips\r\n")
+    LINE_CLEAN_2 = ("082456,50,Notification for user,OwnerNotes\r\n")
+    LINE_CLEAN_3 = ("082789,50\r\n") # optional data not supplied
+    LINE_DIRTY_1 = ("Imma ninja\r\n")
+
+    # HEADER = ("Date,\"First name:\",\"Second name:\",\"Mobile number:\""
+    #             ",country,u_email\r\n")
+    # LINE_CLEAN_1 = ("2014-02-17,Idris,Ibrahim,2311111111111,ng,user1@eskimi.com\r\n")
+    # LINE_CLEAN_2 = ("2014-02-17,yemi,ade,2322222222222,ng,user2@eskimi.com\r\n")
+    # LINE_DIRTY_1 = ("2014-02-17,yemi,ade\r\n")
+
+    # fixtures = ["project.json", "metricsummary.json"]
+
+    def test_upload_clean(self):
+        project = Project.objects.get(name="Tester Project")
+        clean_sample =  self.HEADER + self.LINE_CLEAN_1 + self.LINE_CLEAN_2 + self.LINE_CLEAN_3
+        uploaded = StringIO(clean_sample)
+        ingest_csv(uploaded, project)
+
+        recharge = Recharge.objects.get(msisdn="082123")
+        self.assertEquals(recharge.msisdn, "082123")
+        self.assertEquals(recharge.product_code, "airtime")
+        self.assertEquals(recharge.denomination, "100")
+        self.assertEquals(recharge.notification, "Monies!")
+        self.assertEquals(recharge.notes, "Bleeding Chips")
+
+        # recharge = Recharge.objects.get(msisdn="082789")
+        # self.assertEquals(recharge.msisdn, "082789")
+        # self.assertEquals(recharge.product_code, "airtime")
+        # self.assertEquals(recharge.denomination, "50")
+        # self.assertEquals(recharge.notification, "Null")
+        # self.assertEquals(recharge.notes, "Null")
+
+    # def test_upload_eskimi_dirty(self):
+    #     project = Project.objects.get(name="eskimi")
+    #     dirty_sample =  self.E_HEADER + self.E_LINE_CLEAN_1 + \
+    #         self.E_LINE_DIRTY_1
+    #     uploaded = StringIO(dirty_sample)
+    #     ingest_csv(uploaded, project, "za")
+    #     self.assertRaises(Recharge.DoesNotExist,
+    #                       lambda:  Recharge.objects.get(project_uid="233333333333"))
+
+
 class TestRecharge(TestCase):
     fixtures = fixtures_global
 
