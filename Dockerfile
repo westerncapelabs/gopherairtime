@@ -8,7 +8,7 @@ RUN apt-get install -y nginx
 RUN apt-get install -y supervisor
 
 # libpq needed for psycopg2
-RUN apt-get install -y libpq-dev
+RUN apt-get install -y libpq-dev python-dev
 
 RUN mkdir -p /srv/wcl/prod/gopherairtime
 ADD . /srv/wcl/prod/gopherairtime
