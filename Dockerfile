@@ -20,5 +20,7 @@ RUN rm /etc/nginx/sites-enabled/default
 RUN cp /srv/wcl/prod/gopherairtime/gopherairtime.com.conf /etc/nginx/sites-enabled/
 RUN cp /srv/wcl/prod/gopherairtime/etc/supervisord.conf /etc/supervisord.conf
 
+VOLUME ["/srv/wcl/prod/gopherairtime/logs/"]
+
 EXPOSE 80
 CMD /srv/wcl/prod/gopherairtime/run.sh
