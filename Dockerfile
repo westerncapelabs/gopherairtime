@@ -4,8 +4,8 @@ RUN apt-get update
 RUN apt-get install -y python
 RUN apt-get install -y python-pip
 
-RUN apt-get install nginx
-RUN apt-get install supervisor
+RUN apt-get install -y nginx
+RUN apt-get install -y supervisor
 
 RUN mkdir -p /srv/wcl/prod/gopherairtime
 ADD . /srv/wcl/prod/gopherairtime
