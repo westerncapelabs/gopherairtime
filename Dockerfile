@@ -21,3 +21,4 @@ RUN cp /srv/wcl/prod/gopherairtime/gopherairtime.com.conf /etc/nginx/sites-enabl
 RUN cp /srv/wcl/prod/gopherairtime/etc/supervisord.conf /etc/supervisord.conf
 
 EXPOSE 80
+CMD /srv/wcl/prod/gopherairtime/run.sh
