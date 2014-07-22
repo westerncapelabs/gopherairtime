@@ -10,6 +10,12 @@ RUN apt-get install -y supervisor
 # libpq needed for psycopg2
 RUN apt-get install -y libpq-dev python-dev
 
+# gopherairtime needs rabbit for celery
+RUN echo "deb http://www.rabbitmq.com/debian/ testing main" > /etc/apt/sources.list.d/rabbitmq.conf
+RUN wget -qO - http://www.rabbitmq.com/rabbitmq-signing-key-public.asc | sudo apt-key add -
+RUN apt-get update
+RUN apt-get install -y rabbitmq-server
+
 RUN mkdir -p /srv/wcl/prod/gopherairtime
 ADD . /srv/wcl/prod/gopherairtime
 
