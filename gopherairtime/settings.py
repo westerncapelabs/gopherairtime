@@ -261,6 +261,7 @@ PUSHOVER_MESSAGE_URL = PUSHOVER_BASE_URL + "messages.json"
 
 KATO_KEY = ""
 
+THRESHOLD_WARNING_LEVEL = 1000
 
 # ======================================================
     # VUMIGO SMS SENDER CONFIG
