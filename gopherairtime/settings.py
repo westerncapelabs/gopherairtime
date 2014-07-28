@@ -21,7 +21,7 @@ DATABASES = {
         'NAME': 'gopher',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
@@ -261,12 +261,13 @@ PUSHOVER_MESSAGE_URL = PUSHOVER_BASE_URL + "messages.json"
 
 KATO_KEY = ""
 
+THRESHOLD_WARNING_LEVEL = 1000
 
 # ======================================================
     # VUMIGO SMS SENDER CONFIG
 # ======================================================
 SMS_CONFIG = {"sender_type": "logging"}
-VUMIGO_API_URL = ""
+VUMIGO_API_URL = "http://go.vumi.org/api/v1/go/http_api_nostream"
 
 from api_settings import *
 
