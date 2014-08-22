@@ -396,6 +396,7 @@ def check_recharge_status(data, query_id):
 
 def query_network(msisdn):
     mapping = (
+    	('2760', 'MTN'),
         ('2783', 'MTN'),
         ('2773', 'MTN'),
         ('2778', 'MTN'),
@@ -413,6 +414,7 @@ def query_network(msisdn):
         ('27714', 'VOD'),
         ('27715', 'VOD'),
         ('27716', 'VOD'),
+        ('2761', 'CELLC'),
         ('2784', 'CELLC'),
         ('2774', 'CELLC'),
         ('27811', '8TA'),
