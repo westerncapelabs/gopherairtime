@@ -1,0 +1,493 @@
+/*! HTML5 Boilerplate v4.3.0 | MIT License | http://h5bp.com/ */
+
+/*
+ * What follows is the result of much research on cross-browser styling.
+ * Credit left inline and big thanks to Nicolas Gallagher, Jonathan Neal,
+ * Kroc Camen, and the H5BP dev community and team.
+ */
+
+/* ==========================================================================
+   Base styles: opinionated defaults
+   ========================================================================== */
+
+html {
+    color: #222;
+    font-size: 1em;
+    line-height: 1.4;
+}
+
+/*
+ * Remove text-shadow in selection highlight: h5bp.com/i
+ * These selection rule sets have to be separate.
+ * Customize the background color to match your design.
+ */
+
+::-moz-selection {
+    background: #b3d4fc;
+    text-shadow: none;
+}
+
+::selection {
+    background: #b3d4fc;
+    text-shadow: none;
+}
+
+/*
+ * A better looking default horizontal rule
+ */
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+}
+
+/*
+ * Remove the gap between images, videos, audio and canvas and the bottom of
+ * their containers: h5bp.com/i/440
+ */
+
+audio,
+canvas,
+img,
+svg,
+video {
+    vertical-align: middle;
+}
+
+/*
+ * Remove default fieldset styles.
+ */
+
+fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/*
+ * Allow only vertical resizing of textareas.
+ */
+
+textarea {
+    resize: vertical;
+}
+
+/* ==========================================================================
+   Browse Happy prompt
+   ========================================================================== */
+
+.browsehappy {
+    margin: 0.2em 0;
+    background: #ccc;
+    color: #000;
+    padding: 0.2em 0;
+}
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+
+/* ==|== primary styles =====================================================
+   Author: Steve Barnett | Naga
+   ========================================================================== */
+
+
+
+body {
+  font-family: "museo-sans",Helvetica,"Helvetica Neue",Arial,sans-serif;
+  background-color: #d6d6d6;
+  padding: 1em;
+}
+
+img {
+  width: 100%;
+  height: auto;
+}
+
+.persona {
+  float: left;
+  background-color: white;
+  margin-bottom: 4em;
+  page-break-after: always;
+}
+
+@media screen and (min-width: 60em) {
+  .persona {
+    width: 48%;
+    margin-left: 4%;
+  }
+
+  .persona:nth-of-type(odd) {
+    margin-left: 0;
+    clear: left;
+  }
+
+  .persona-details-main {
+    float: left;
+    clear: left;
+    width: 50%;
+    padding-top: 2em;
+  }
+
+  .persona-photo {
+    float: right;
+    width: 50%;
+  }
+
+  .persona-quote,
+  .hats {
+    clear: both;
+  }
+}
+
+h1 {
+  margin: 0;
+}
+
+h2 {
+  margin: 0;
+}
+
+.persona-desc {
+  padding: 1em 0.5em;
+  font-size: 1.5em;
+  color: #d22b2b;
+  margin: 0;
+} 
+
+.persona-photo {
+  text-align: center;
+  margin: 0;
+}
+
+.persona-details {
+  padding: 1em;
+}
+
+.persona-name {
+  text-transform: uppercase;
+  font-size: 3em;
+
+}
+
+.persona-quote {
+  background-color: #d22b2b;
+  color: white;
+  font-size: 1.5em;
+  margin: 0;
+  padding: 1em 2em;
+  position: relative;
+}
+
+.persona-quote:before,
+.persona-quote:after {
+  font-size: 3em;
+  position: absolute;
+  opacity: 0.5;
+}
+
+
+.persona-quote:before {
+    content: '\201C';
+    top: 0;
+    left: 0.15em;
+  }
+
+.persona-quote:after {
+    content: '\201D';
+    bottom: -0.5em;
+    right: 0.25em;
+  }
+
+.persona-details-more {
+  font-size: 1.25em;
+  padding: 1em;
+}
+
+.persona-details-more p {
+  margin-top: 0;
+}
+
+.persona-details-more p:last-child {
+  margin-bottom: 0;
+}
+
+.credits {
+  border-top: 1px dotted #c2c2c2;
+  font-size: 0.8em;
+  text-align: right;
+}
+
+.credits a {
+  color: black;
+}
+
+.persona-desc-alt {
+  color: #666;
+}
+
+.persona-quote-alt {
+  background-color: #666;
+}
+
+.hats {
+  background-color: #e6e6e6;
+  padding: 1em;
+  margin: 0;
+  list-style: none;
+  font-size: 1.25em;
+  text-align: center;
+}
+
+.hat {
+  display: inline-block;
+  margin: 0 1em;
+}
+
+.hat-billing {
+  color: #070;
+}
+
+.hat-strategy {
+  color: #009;
+}
+
+.hat-system-health {
+  color: #b00;
+}
+
+.hat-implementation {
+  color: #754016;
+}
+
+.hat-analysis {
+  color: #909;
+}
+
+.haticon {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  background-image: url(img/hats.png);
+  background-repeat: no-repeat;
+}
+
+.haticon-billing {
+  background-position: 0 0;
+}
+
+.haticon-strategy {
+  background-position: -40px 0;
+}
+
+.haticon-system-health {
+  background-position: -80px 0;
+}
+
+.haticon-implementation {
+  background-position: -120px 0;
+}
+
+.haticon-analysis {
+  background-position: -160px 0;
+}
+
+.hat-label {
+  position: relative;
+  top: -0.5em;
+  margin-left: 0.5em;
+}
+
+/* http://timkadlec.com/2012/10/ie10-snap-mode-and-responsive-design/*/
+
+@-webkit-viewport {
+  width : device-width;
+}
+
+@-moz-viewport {
+  width : device-width;
+}
+
+@-ms-viewport {
+  width : device-width;
+}
+
+@-o-viewport {
+  width : device-width;
+}
+
+@viewport {
+  width : device-width;
+}
+
+html {
+  -webkit-overflow-scrolling : touch;
+  -webkit-tap-highlight-color : lighten($primaryColor, 75%);
+}
+
+
+/* ==|== Links ==== */
+
+:not(a):focus {
+  outline: none;
+}
+
+
+
+
+
+
+/* ==========================================================================
+   Helper classes
+   ========================================================================== */
+
+/*
+ * Hide visually and from screen readers: h5bp.com/u
+ */
+
+.hidden {
+    display: none !important;
+    visibility: hidden;
+}
+
+/*
+ * Hide only visually, but have it available for screen readers: h5bp.com/v
+ */
+
+.visuallyhidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+/*
+ * Extends the .visuallyhidden class to allow the element to be focusable
+ * when navigated to via the keyboard: h5bp.com/p
+ */
+
+.visuallyhidden.focusable:active,
+.visuallyhidden.focusable:focus {
+    clip: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    position: static;
+    width: auto;
+}
+
+/*
+ * Hide visually and from screen readers, but maintain layout
+ */
+
+.invisible {
+    visibility: hidden;
+}
+
+/*
+ * Clearfix: contain floats
+ *
+ * For modern browsers
+ * 1. The space content is one way to avoid an Opera bug when the
+ *    `contenteditable` attribute is included anywhere else in the document.
+ *    Otherwise it causes space to appear at the top and bottom of elements
+ *    that receive the `clearfix` class.
+ * 2. The use of `table` rather than `block` is only necessary if using
+ *    `:before` to contain the top-margins of child elements.
+ */
+
+.clearfix:before,
+.clearfix:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.clearfix:after {
+    clear: both;
+}
+
+/*
+ * For IE 6/7 only
+ * Include this rule to trigger hasLayout and contain floats.
+ */
+
+.clearfix {
+    *zoom: 1;
+}
+
+/* ==========================================================================
+   Print styles.
+   Inlined to avoid the additional HTTP request: h5bp.com/r
+   ========================================================================== */
+
+@media print {
+    * {
+        background: transparent !important;
+        color: #000 !important; /* Black prints faster: h5bp.com/s */
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    a,
+    a:visited {
+        text-decoration: underline;
+    }
+
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+
+    abbr[title]:after {
+        content: " (" attr(title) ")";
+    }
+
+    /*
+     * Don't show links that are fragment identifiers,
+     * or use the `javascript:` pseudo protocol
+     */
+
+    a[href^="#"]:after,
+    a[href^="javascript:"]:after {
+        content: "";
+    }
+
+    pre,
+    blockquote {
+        border: 1px solid #999;
+        page-break-inside: avoid;
+    }
+
+    thead {
+        display: table-header-group; /* h5bp.com/t */
+    }
+
+    tr,
+    img {
+        page-break-inside: avoid;
+    }
+
+    img {
+        width: auto;
+        max-width: 100% !important;
+    }
+
+    p,
+    h2,
+    h3 {
+        orphans: 3;
+        widows: 3;
+    }
+
+    h2,
+    h3 {
+        page-break-after: avoid;
+    }
+}
