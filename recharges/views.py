@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User, Group
-from .models import DummyModel
+from .models import RechargeModel
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .serializers import (UserSerializer, GroupSerializer,
-                          DummyModelSerializer)
+from recharges.serializers import (UserSerializer, GroupSerializer,
+                          RechargeModelSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -24,11 +24,11 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
 
 
-class DummyModelViewSet(viewsets.ModelViewSet):
+class RechargeModelViewSet(viewsets.ModelViewSet):
 
     """
     API endpoint that allows dummy models to be viewed or edited.
     """
     permission_classes = (IsAuthenticated,)
-    queryset = DummyModel.objects.all()
-    serializer_class = DummyModelSerializer
+    queryset = RechargeModel.objects.all()
+    serializer_class = RechargeModelSerializer

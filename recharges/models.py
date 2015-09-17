@@ -4,14 +4,16 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 
 
-class DummyModel(models.Model):
+class RechargeModel(models.Model):
 
     """
     - Nice docstring please
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product_code = models.CharField(max_length=20)
-    data = HStoreField(null=True, blank=True)
+    amount = models.DecimalField(max_digits=5, decima_places=2)
+    """data = HStoreField(null=True, blank=True)"""
+    msisdn = models.CharField(max_length=200)
+    author = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
