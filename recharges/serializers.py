@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from .models import DummyModel
+from .models import Recharge
 from rest_framework import serializers
 
 
@@ -17,5 +17,5 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 
 class DummyModelSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = DummyModel
+        model = Recharge
         fields = ('url', 'id', 'product_code', 'data')

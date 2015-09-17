@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 
 
-class RechargeModel(models.Model):
+class Recharge(models.Model):
 
     """
     - Nice docstring please

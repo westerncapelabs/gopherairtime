@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 
 
-from recharges.models import RechargeModel
+from recharges.models import Recharge
 
 
 class APITestCase(TestCase):
@@ -54,6 +54,6 @@ class TestExampleAppHStore(AuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        d = RechargeModel.objects.last()
+        d = Recharge.objects.last()
         self.assertEqual(d.product_code, 'test_code')
         self.assertEqual(d.data, {'a': 'a', 'b': '2'})
