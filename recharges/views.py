@@ -3,7 +3,7 @@ from .models import Recharge
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from recharges.serializers import (UserSerializer, GroupSerializer,
-                          RechargeSerializer)
+                                   RechargeSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
