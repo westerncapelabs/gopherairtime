@@ -30,7 +30,7 @@ class AuthenticatedAPITestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 
 
-class TestExampleAppHStore(AuthenticatedAPITestCase):
+class TestRechargeAPI(AuthenticatedAPITestCase):
 
     def test_login(self):
         request = self.client.post(
@@ -43,10 +43,10 @@ class TestExampleAppHStore(AuthenticatedAPITestCase):
                          "Status code on /auth/login was %s (should be 200)."
                          % request.status_code)
 
-    def test_create_dummy_model_data(self):
+    def test_create_recharge_model_data(self):
         post_data = {
-            "product_code": "test_code",
-            "data": {'a': 'a', 'b': 2}
+            "amount": "10.0",
+            "msisdn": "084 123 4023"
         }
         response = self.client.post('/recharges/dummy/',
                                     json.dumps(post_data),
@@ -55,5 +55,19 @@ class TestExampleAppHStore(AuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         d = Recharge.objects.last()
-        self.assertEqual(d.product_code, 'test_code')
-        self.assertEqual(d.data, {'a': 'a', 'b': '2'})
+        self.assertEqual(d.amount, 10.0)
+        self.assertEqual(d.msisdn, "084 123 4023")
+
+    def test_create_recharge_bad_model_data(self):
+        post_data = {
+            "amount": "109888787766650.00",
+            "msisdn": "084 123 4023"
+        }
+        response = self.client.post('/recharges/dummy/',
+                                    json.dumps(post_data),
+                                    content_type='application/json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        d = Recharge.objects.all().count()
+        self.assertEqual(d, 0)

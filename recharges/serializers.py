@@ -15,7 +15,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'name')
 
 
-class DummyModelSerializer(serializers.HyperlinkedModelSerializer):
+class RechargeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Recharge
-        fields = ('url', 'id', 'product_code', 'data')
+        fields = ('url', 'id', 'amount', 'msisdn')
