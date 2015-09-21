@@ -15,4 +15,4 @@ class Recharge(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):  # __unicode__ on Python 2
-        return "R%s recharge for %s" % (self.amount, self.msisdn)
+        return "%s recharge for %s" % (self.amount, self.msisdn)
