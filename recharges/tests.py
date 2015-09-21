@@ -34,7 +34,7 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
     def test_login(self):
         request = self.client.post(
-            '/recharges/api-token-auth/',
+            '/api/v1/token-auth/',
             {"username": "testuser", "password": "testpass"})
         token = request.data.get('token', None)
         self.assertIsNotNone(
@@ -48,7 +48,7 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
             "amount": "10.0",
             "msisdn": "084 123 4023"
         }
-        response = self.client.post('/recharges/dummy/',
+        response = self.client.post('/api/v1/recharges/',
                                     json.dumps(post_data),
                                     content_type='application/json')
 
@@ -60,10 +60,10 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
     def test_create_recharge_bad_model_data(self):
         post_data = {
-            "amount": "109888787766650.00",
+            "amount": "99999999999888888650.00",
             "msisdn": "084 123 4023"
         }
-        response = self.client.post('/recharges/dummy/',
+        response = self.client.post('/api/v1/recharges/',
                                     json.dumps(post_data),
                                     content_type='application/json')
 
