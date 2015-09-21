@@ -110,7 +110,7 @@ STATIC_URL = '/static/'
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
-    'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', ""),
+    # 'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', "http://localhost"),
 }
 
 # REST Framework conf defaults
@@ -155,3 +155,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 
 import djcelery
 djcelery.setup_loader()
+try:
+    from gopherairtime.local_settings import *  # flake8: noqa
+except ImportError:
+    pass

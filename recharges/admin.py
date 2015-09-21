@@ -1,5 +1,5 @@
 from django.contrib import admin
 
-from .models import DummyModel
+from recharges.models import Recharge
 
-admin.site.register(DummyModel)
+admin.site.register(Recharge)
