@@ -11,3 +11,5 @@ dj-static
 celery
 django-celery
 redis
+requests
+responses
