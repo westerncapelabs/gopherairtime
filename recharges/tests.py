@@ -1,19 +1,28 @@
 import json
+import responses
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 
 
-from recharges.models import Recharge
+from recharges.models import Recharge, Account
+from recharges.tasks import hotsocket_login
 
 
 class APITestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+
+
+class TaskTestCase(TestCase):
+
+    def setUp(self):
+        pass
 
 
 class AuthenticatedAPITestCase(APITestCase):
@@ -71,3 +80,31 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
         d = Recharge.objects.all().count()
         self.assertEqual(d, 0)
+
+
+class TestRechargeTasks(TaskTestCase):
+
+    @responses.activate
+    def test_refresh_hotsocket_token_good(self):
+
+        expected_response_good = {
+            "response": {
+                "message": "Login Successful.",
+                "status": "0000",
+                "token": "mytesttoken"
+            }
+        }
+
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/login",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+
+        # run the task to refresh the token
+        result = hotsocket_login.delay()
+
+        self.assertEqual(result.get(), True)
+
+        t = Account.objects.last()
+        self.assertEqual(t.token, "mytesttoken")
