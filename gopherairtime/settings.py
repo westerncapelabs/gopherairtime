@@ -154,6 +154,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 
+HOTSOCKET_API_ENDPOINT = 'http://api.hotsocket.co.za:8080/test'
+
 import djcelery
 djcelery.setup_loader()
 try:

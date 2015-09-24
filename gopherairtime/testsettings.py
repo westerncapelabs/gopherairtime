@@ -12,3 +12,4 @@ CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ALWAYS_EAGER = True
 BROKER_BACKEND = 'memory'
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+HOTSOCKET_API_ENDPOINT = 'http://test-hotsocket'
