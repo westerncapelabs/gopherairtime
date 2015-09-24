@@ -157,6 +157,11 @@ CELERY_ACCEPT_CONTENT = ['json']
 HOTSOCKET_API_ENDPOINT = 'http://api.hotsocket.co.za:8080/test'
 HOTSOCKET_API_USERNAME = ''
 HOTSOCKET_API_PASSWORD = ''
+HOTSOCKET_CODES = {
+    "LOGIN_SUCCESSFUL": "0000",
+    "LOGIN_FAILURE": "5010",
+}
+
 
 import djcelery
 djcelery.setup_loader()
