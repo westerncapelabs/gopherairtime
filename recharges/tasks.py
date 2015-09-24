@@ -22,11 +22,15 @@ class Hotsocket_Login(Task):
         """
         l = self.get_logger(**kwargs)
         l.info("Logging into hotsocket")
-        auth = {'username': 'trial_acc_1212', 'password': 'tr14l_l1k3m00n',
+
+        auth = {'username': settings.HOTSOCKET_API_USERNAME,
+                'password': settings.HOTSOCKET_API_PASSWORD,
                 'as_json': True}
+
         r = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
                           data=auth)
         result = r.json()
+        # Store the result for other tasks to use
         token = result["response"]["token"]
         account = Account()
         account.token = token
