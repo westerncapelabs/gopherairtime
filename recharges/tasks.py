@@ -14,7 +14,7 @@ class Hotsocket_Login(Task):
     """
     Task to get the username and password varified then produce a token
     """
-    name = "gopherairtime.recharges.tasks.hotsocket_login"
+    name = "recharges.tasks.hotsocket_login"
 
     def run(self, **kwargs):
         """
