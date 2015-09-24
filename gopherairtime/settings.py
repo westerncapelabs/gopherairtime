@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
 import os
-
+from datatime import timedelta
 import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -149,6 +149,20 @@ CELERY_ALWAYS_EAGER = False
 CELERY_IMPORTS = (
     'recharges.tasks',
 )
+
+CELERY_CREATE_MISSING_QUEUES = True
+CELERY_ROUTES = {
+    'recharges.tasks.hotsocket_login': {
+        'queue': 'gopherairtime_hotsocket',
+    },
+}
+
+CELERYBEAT_SCHEDULE = {
+    'login-every-60-minutes': {
+        'task': 'recharges.tasks.hotsocket_login',
+        'schedule': timedelta(minutes=60),
+    },
+}
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
