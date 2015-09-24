@@ -108,3 +108,27 @@ class TestRechargeTasks(TaskTestCase):
 
         t = Account.objects.last()
         self.assertEqual(t.token, "mytesttoken")
+
+    @responses.activate
+    def test_refresh_hotsocket_token_bad(self):
+
+        expected_response_bad = {
+            "response": {
+                "message": "Login Failure. Incorrect Username or Password.",
+                "status": "5010"
+            }
+        }
+
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/login",
+            json.dumps(expected_response_bad),
+            status=200, content_type='application/json')
+
+        # run the task to refresh the token
+        result = hotsocket_login.delay()
+
+        self.assertEqual(result.get(), False)
+
+        tokens = Account.objects.all().count()
+        self.assertEqual(tokens, 0)

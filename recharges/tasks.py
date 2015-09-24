@@ -30,11 +30,18 @@ class Hotsocket_Login(Task):
         r = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
                           data=auth)
         result = r.json()
-        # Store the result for other tasks to use
-        token = result["response"]["token"]
-        account = Account()
-        account.token = token
-        account.save()
-        return True
+        # Check the result
+        if result["response"]["status"] == \
+                settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
+            l.info("Successful login to hotsocket")
+            # Store the result for other tasks to use
+            token = result["response"]["token"]
+            account = Account()
+            account.token = token
+            account.save()
+            return True
+        else:
+            l.error("Failed login to hotsocket")
+            return False
 
 hotsocket_login = Hotsocket_Login()
