@@ -1,23 +1,28 @@
 from celery.task import Task
 from celery.utils.log import get_task_logger
+import requests
 
 
 logger = get_task_logger(__name__)
 
 
-class The_Incr(Task):
+class Hotsocket_Login(Task):
 
     """
-    Task to incr something
+    Task to get the username and password varified then produce a token
     """
-    name = "gopherairtime.recharges.tasks.the_incr"
+    name = "gopherairtime.recharges.tasks.hotsocket_login"
 
-    def run(self, anum, **kwargs):
+    def run(self, **kwargs):
         """
-        Returns an incr'd number
+        Returns the token
         """
         l = self.get_logger(**kwargs)
-        l.info("Incrementing <%s>" % (anum,))
-        return int(anum)+1
+        l.info("Logging into hotsocket")
+        auth = {'username': 'trial_acc_1212', 'password': 'tr14l_l1k3m00n',
+                'as_json': True}
+        r = requests.post("http://api.hotsocket.co.za:8080/test/login",data=auth)
+        result = r.json()
+        return result["response"]["token"]
 
-the_incr = The_Incr()
+hotsocket_login = Hotsocket_Login()

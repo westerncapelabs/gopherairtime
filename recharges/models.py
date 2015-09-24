@@ -16,3 +16,14 @@ class Recharge(models.Model):
 
     def __str__(self):  # __unicode__ on Python 2
         return "%s recharge for %s" % (self.amount, self.msisdn)
+
+
+class Account(models.Model):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    token = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):  # __unicode__ on Python 2
+        return "requested token is: %s" % (self.token)
