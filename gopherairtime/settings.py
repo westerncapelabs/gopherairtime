@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
 import os
-
+from datetime import timedelta
 import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 3rd party
+    'djcelery',
     'django_hstore',
     'raven.contrib.django.raven_compat',
     'rest_framework',
@@ -149,9 +150,32 @@ CELERY_IMPORTS = (
     'recharges.tasks',
 )
 
+CELERY_CREATE_MISSING_QUEUES = True
+CELERY_ROUTES = {
+    'recharges.tasks.hotsocket_login': {
+        'queue': 'gopherairtime_hotsocket',
+    },
+}
+
+CELERYBEAT_SCHEDULE = {
+    'login-every-60-minutes': {
+        'task': 'recharges.tasks.hotsocket_login',
+        'schedule': timedelta(minutes=60),
+    },
+}
+
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
+
+HOTSOCKET_API_ENDPOINT = 'http://api.hotsocket.co.za:8080/test'
+HOTSOCKET_API_USERNAME = ''
+HOTSOCKET_API_PASSWORD = ''
+HOTSOCKET_CODES = {
+    "LOGIN_SUCCESSFUL": "0000",
+    "LOGIN_FAILURE": "5010",
+}
+
 
 import djcelery
 djcelery.setup_loader()
