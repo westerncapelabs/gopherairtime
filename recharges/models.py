@@ -11,11 +11,20 @@ class Recharge(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     msisdn = models.CharField(max_length=20)
+    hotsocket_ref = models.IntegerField(default=0)
+    status_choices = (
+        (0, 'Unprocessed'),
+        (1, 'In Process'),
+        (2, 'Successful'),
+        (3, 'Failed'),
+        (4, 'Unrecoverable'))
+    hotsocket_status = models.IntegerField(choices=status_choices, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):  # __unicode__ on Python 2
-        return "%s recharge for %s" % (self.amount, self.msisdn)
+        return "%s recharge for %s and %s" % (self.amount, self.msisdn,
+                                              self.hotsocket_status)
 
 
 class Account(models.Model):
