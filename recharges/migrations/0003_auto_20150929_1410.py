@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='recharge',
-            name='hotsocket_status',
-            field=models.IntegerField(choices=[(0, 'Unprocessed'), (1, 'In Process'), (2, 'Successful'), (3, 'Failed'), (4, 'Unrecoverable')], default=0),
+            name='status',
+            field=models.IntegerField(default=0, choices=[(0, 'Unprocessed'), (1, 'In Process'), (2, 'Successful'), (3, 'Failed'), (4, 'Unrecoverable')]),
         ),
     ]

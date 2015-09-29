@@ -18,13 +18,12 @@ class Recharge(models.Model):
         (2, 'Successful'),
         (3, 'Failed'),
         (4, 'Unrecoverable'))
-    hotsocket_status = models.IntegerField(choices=status_choices, default=0)
+    status = models.IntegerField(choices=status_choices, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):  # __unicode__ on Python 2
-        return "%s recharge for %s and %s" % (self.amount, self.msisdn,
-                                              self.hotsocket_status)
+        return "%s recharge for %s" % (self.amount, self.msisdn)
 
 
 class Account(models.Model):
