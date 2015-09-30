@@ -4,7 +4,7 @@ from django.conf import settings
 from celery.task import Task
 from celery.utils.log import get_task_logger
 
-from .models import Account
+from .models import Account, Recharge
 
 logger = get_task_logger(__name__)
 
@@ -45,3 +45,23 @@ class Hotsocket_Login(Task):
             return False
 
 hotsocket_login = Hotsocket_Login()
+
+
+class Hotsocket_Process_Queue(Task):
+
+    """
+    Task to get the get all unprocessed recharges and create tasks to
+    submit them to hotsocket
+    """
+    name = "recharges.tasks.hotsocket_process_queue"
+
+    def run(self, **kwargs):
+        """
+        Returns the number of submitted requests
+        """
+        l = self.get_logger(**kwargs)
+        l.info("Looking up the unprocessed requests")
+        queued = Recharge.objects.filter(status=0).count()
+        return "%s requests queued to Hotsocket" % queued
+
+hotsocket_process_queue = Hotsocket_Process_Queue()

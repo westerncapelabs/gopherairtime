@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 
 
 from recharges.models import Recharge, Account
-from recharges.tasks import hotsocket_login
+from recharges.tasks import hotsocket_login, hotsocket_process_queue
 
 
 class APITestCase(TestCase):
@@ -85,6 +85,12 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
 class TestRechargeTasks(TaskTestCase):
 
+    def make_airtime_request(self, amount=100.00, msisdn="+27123",
+                             status=0):
+        airtime = Recharge.objects.create(
+            amount=amount, msisdn=msisdn, status=status)
+        return airtime.id
+
     @responses.activate
     def test_refresh_hotsocket_token_good(self):
 
@@ -133,3 +139,14 @@ class TestRechargeTasks(TaskTestCase):
 
         tokens = Account.objects.all().count()
         self.assertEqual(tokens, 0)
+
+    def test_make_hotsocket_queue(self):
+        self.make_airtime_request()
+        self.make_airtime_request(status=1)
+        self.make_airtime_request(status=2)
+        self.make_airtime_request()
+
+        # run the task to queue the hotsocket requests
+        result = hotsocket_process_queue.delay()
+
+        self.assertEqual(result.get(), "2 requests queued to Hotsocket")
