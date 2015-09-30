@@ -65,6 +65,8 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
         d = Recharge.objects.last()
         self.assertEqual(d.amount, 10.0)
         self.assertEqual(d.msisdn, "084 123 4023")
+        self.assertEqual(d.status, 0)
+        self.assertEqual(d.hotsocket_ref, 0)
 
     def test_create_recharge_bad_model_data(self):
         post_data = {
