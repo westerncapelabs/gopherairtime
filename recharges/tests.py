@@ -9,7 +9,8 @@ from rest_framework.authtoken.models import Token
 
 
 from recharges.models import Recharge, Account
-from recharges.tasks import hotsocket_login, hotsocket_process_queue
+from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
+                             hotsocket_get_airtime)
 
 
 class APITestCase(TestCase):
@@ -85,11 +86,15 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
 class TestRechargeTasks(TaskTestCase):
 
-    def make_airtime_request(self, amount=100.00, msisdn="+27123",
-                             status=0):
+    def make_recharge(self, amount=100.00, msisdn="+27123", status=0):
         airtime = Recharge.objects.create(
             amount=amount, msisdn=msisdn, status=status)
         return airtime.id
+
+    def make_account(self, ):
+        account = Account.objects.create(
+            token='1234')
+        return account.id
 
     @responses.activate
     def test_refresh_hotsocket_token_good(self):
@@ -140,13 +145,69 @@ class TestRechargeTasks(TaskTestCase):
         tokens = Account.objects.all().count()
         self.assertEqual(tokens, 0)
 
-    def test_make_hotsocket_queue(self):
-        self.make_airtime_request()
-        self.make_airtime_request(status=1)
-        self.make_airtime_request(status=2)
-        self.make_airtime_request()
+    def test_hotsocket_process_queue(self):
+        self.make_recharge()
+        self.make_recharge(status=1)
+        self.make_recharge(status=2)
+        self.make_recharge()
 
         # run the task to queue the hotsocket requests
         result = hotsocket_process_queue.delay()
 
         self.assertEqual(result.get(), "2 requests queued to Hotsocket")
+
+    @responses.activate
+    def test_hotsocket_get_airtime_good(self):
+        self.make_account()
+
+        expected_response_good = {
+            "response": {
+                "hotsocket_ref": 4487,
+                "serveport": 4487,
+                "message": "Successfully submitted recharge",
+                "status": "0000",
+                "token": "myprocessqueue"
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/recharge",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+
+        recharge_id = self.make_recharge(msisdn="+277244555", status=0)
+        result = hotsocket_get_airtime.delay(recharge_id)
+        self.assertEqual(result.get(),
+                         "airtime request for +277244555 successful")
+
+        """tests for the correct URL request"""
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/recharge")
+        recharge = Recharge.objects.get(id=recharge_id)
+
+        self.assertEqual(recharge.status, 1)
+
+    def test_hotsocket_get_airtime_in_process(self):
+        self.make_account()
+        recharge_id = self.make_recharge(msisdn="+277244555", status=1)
+        result = hotsocket_get_airtime.delay(recharge_id)
+        self.assertEqual(result.get(), "airtime request for +277244555 in process")
+
+    def test_hotsocket_get_airtime_successful(self):
+        self.make_account()
+        recharge_id = self.make_recharge(msisdn="+277244555", status=2)
+        result = hotsocket_get_airtime.delay(recharge_id)
+        self.assertEqual(result.get(), "airtime request for +277244555 is successful")
+
+    def test_hotsocket_get_airtime_failed(self):
+        self.make_account()
+        recharge_id = self.make_recharge(msisdn="+277244555", status=3)
+        result = hotsocket_get_airtime.delay(recharge_id)
+        self.assertEqual(result.get(), "airtime request for +277244555 failed")
+
+    def test_hotsocket_get_airtime_unrecoverable(self):
+        self.make_account()
+        recharge_id = self.make_recharge(msisdn="+277244555", status=4)
+        result = hotsocket_get_airtime.delay(recharge_id)
+        self.assertEqual(result.get(), "airtime request for +277244555 is unrecoverable")
