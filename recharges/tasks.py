@@ -65,3 +65,73 @@ class Hotsocket_Process_Queue(Task):
         return "%s requests queued to Hotsocket" % queued
 
 hotsocket_process_queue = Hotsocket_Process_Queue()
+
+
+class Hotsocket_Get_Airtime(Task):
+
+    """
+    Task to make hotsocket post request to load airtime, saves hotsocket ref
+    to the recharge model and update status
+    """
+    name = "recharges.tasks.hotsocket_get_airtime"
+
+    def run(self, recharge_id, **kwargs):
+        """
+        Returns the recharge model entry
+        """
+        l = self.get_logger(**kwargs)
+        l.info("Looking up the unprocessed requests")
+
+        """account gets the last token entry to be stored in token variable"""
+        account = Account.objects.last()
+        token = account.token
+
+        """recharge gets entry by automatically generated id from the helper
+        function the calls msisdn to be stored msisdn variable"""
+        recharge = Recharge.objects.get(id=recharge_id)
+        cell_number = recharge.msisdn
+        amount = recharge.amount
+        status = recharge.status
+
+
+
+        if status == 0:
+
+            auth = {'username': settings.HOTSOCKET_API_USERNAME,
+                    'password': settings.HOTSOCKET_API_PASSWORD,
+                    'as_json': True,
+                    'token': token,
+                    'recipient_msisdn': cell_number,
+                    'product_code': 'DATA',
+                    'network_code': 'VOD',
+                    'denomination': amount,
+                    'reference': 12345}
+
+            r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
+                              data=auth)
+
+            # change status to 1
+            recharge.status = 1
+            recharge.save()
+            # save status
+
+
+            # result = r.json()
+
+            # if result["response"]["message"] ==\
+            #     settings.HOTSOCKET_CODES["Successfully submitted recharge"]:
+            #     status = result["response"]["status"]
+            #     return True
+
+            return "airtime request for %s successful" % cell_number
+        elif status == 1:
+            return "airtime request for %s in process" % cell_number
+        elif status == 2:
+            return "airtime request for %s is successful" % cell_number
+        elif status == 3:
+            return "airtime request for %s failed" % cell_number
+        elif status == 4:
+            return "airtime request for %s is unrecoverable" % cell_number
+
+
+hotsocket_get_airtime = Hotsocket_Get_Airtime()
