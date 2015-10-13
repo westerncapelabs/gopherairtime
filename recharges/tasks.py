@@ -61,7 +61,18 @@ class Hotsocket_Process_Queue(Task):
         """
         l = self.get_logger(**kwargs)
         l.info("Looking up the unprocessed requests")
-        queued = Recharge.objects.filter(status=0).count()
+        # auth = {'username': settings.HOTSOCKET_API_USERNAME,
+        #         'password': settings.HOTSOCKET_API_PASSWORD,
+        #         'as_json': True
+        # }
+
+        # r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
+        #                   data=auth)
+
+        queued = Recharge.objects.filter(status=0)
+        for recharge in queued:
+            print('firing a task! recharge id: , recharge.id')
+            result = hotsocket_get_airtime.delay(recharge.id)
         return "%s requests queued to Hotsocket" % queued
 
 hotsocket_process_queue = Hotsocket_Process_Queue()
