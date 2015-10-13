@@ -94,21 +94,20 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
         l = self.get_logger(**kwargs)
         l.info("Looking up hotsocket reference number and storing it")
-        auth = {'username': settings.HOTSOCKET_API_USERNAME,
-                'password': settings.HOTSOCKET_API_PASSWORD,
-                'as_json': True,
-                'token': token,
-                'recipient_msisdn': cell_number,
-                'product_code': 'DATA',
-                'network_code': 'VOD',
-                'denomination': amount,
-                'reference': 12345}
-
-        r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
-                          data=auth)
-        result = r.json()
         if status == 0:
+            auth = {'username': settings.HOTSOCKET_API_USERNAME,
+                    'password': settings.HOTSOCKET_API_PASSWORD,
+                    'as_json': True,
+                    'token': token,
+                    'recipient_msisdn': cell_number,
+                    'product_code': 'DATA',
+                    'network_code': 'VOD',
+                    'denomination': amount,
+                    'reference': 12345}
 
+            r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
+                              data=auth)
+            result = r.json()
             # change status to 1 and save status to be returned
             recharge.status = 1
             recharge.save()
@@ -120,6 +119,20 @@ class Hotsocket_Get_Airtime(Task):
             return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
                                                                  ref)
         elif status == 1:
+            auth = {'username': settings.HOTSOCKET_API_USERNAME,
+                    'password': settings.HOTSOCKET_API_PASSWORD,
+                    'as_json': True,
+                    'token': token,
+                    'recipient_msisdn': cell_number,
+                    'product_code': 'DATA',
+                    'network_code': 'VOD',
+                    'denomination': amount,
+                    'reference': 12345}
+
+            r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
+                              data=auth)
+            result = r.json()
+            print(result)
             return "airtime request for %s in process" % cell_number
         elif status == 2:
             return "airtime request for %s is successful" % cell_number
