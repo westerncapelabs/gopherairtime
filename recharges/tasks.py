@@ -62,7 +62,7 @@ class Hotsocket_Process_Queue(Task):
         l = self.get_logger(**kwargs)
         l.info("Looking up the unprocessed requests")
         queued = Recharge.objects.filter(status=0).count()
-        return "%s requests queued to Htsocket" % queued
+        return "%s requests queued to Hotsocket" % queued
 
 hotsocket_process_queue = Hotsocket_Process_Queue()
 
@@ -139,7 +139,7 @@ class Hotsocket_Get_Airtime(Task):
         elif status == 3:
             return "airtime request for %s failed" % cell_number
         elif status == 4:
-            return "airtime request for %s is unrecoverable" % status
+            return "airtime request for %s is unrecoverable" % cell_number
 
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
