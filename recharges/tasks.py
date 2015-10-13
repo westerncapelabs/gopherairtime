@@ -62,7 +62,7 @@ class Hotsocket_Process_Queue(Task):
         l = self.get_logger(**kwargs)
         l.info("Looking up the unprocessed requests")
         queued = Recharge.objects.filter(status=0).count()
-        return "%s requests queued to Hotsocket" % queued
+        return "%s requests queued to Htsocket" % queued
 
 hotsocket_process_queue = Hotsocket_Process_Queue()
 
@@ -92,38 +92,33 @@ class Hotsocket_Get_Airtime(Task):
         cell_number = recharge.msisdn
         amount = recharge.amount
         status = recharge.status
+        l = self.get_logger(**kwargs)
+        l.info("Looking up hotsocket reference number and storing it")
+        auth = {'username': settings.HOTSOCKET_API_USERNAME,
+                'password': settings.HOTSOCKET_API_PASSWORD,
+                'as_json': True,
+                'token': token,
+                'recipient_msisdn': cell_number,
+                'product_code': 'DATA',
+                'network_code': 'VOD',
+                'denomination': amount,
+                'reference': 12345}
 
-
-
+        r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
+                          data=auth)
+        result = r.json()
         if status == 0:
 
-            auth = {'username': settings.HOTSOCKET_API_USERNAME,
-                    'password': settings.HOTSOCKET_API_PASSWORD,
-                    'as_json': True,
-                    'token': token,
-                    'recipient_msisdn': cell_number,
-                    'product_code': 'DATA',
-                    'network_code': 'VOD',
-                    'denomination': amount,
-                    'reference': 12345}
-
-            r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
-                              data=auth)
-
-            # change status to 1
+            # change status to 1 and save status to be returned
             recharge.status = 1
             recharge.save()
-            # save status
 
-
-            # result = r.json()
-
-            # if result["response"]["message"] ==\
-            #     settings.HOTSOCKET_CODES["Successfully submitted recharge"]:
-            #     status = result["response"]["status"]
-            #     return True
-
-            return "airtime request for %s successful" % cell_number
+            # Get hotsocket reference and save it to recharge then returned
+            ref = result["response"]["hotsocket_ref"]
+            recharge.hotsocket_ref = ref
+            recharge.save()
+            return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
+                                                                 ref)
         elif status == 1:
             return "airtime request for %s in process" % cell_number
         elif status == 2:
@@ -131,7 +126,7 @@ class Hotsocket_Get_Airtime(Task):
         elif status == 3:
             return "airtime request for %s failed" % cell_number
         elif status == 4:
-            return "airtime request for %s is unrecoverable" % cell_number
+            return "airtime request for %s is unrecoverable" % status
 
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
