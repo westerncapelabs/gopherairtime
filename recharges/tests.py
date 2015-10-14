@@ -10,7 +10,9 @@ from rest_framework.authtoken.models import Token
 
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
-                             hotsocket_get_airtime)
+                             hotsocket_get_airtime, fn_return_cat,
+                             fn_get_token, fn_get_recharge, fn_post_authority,
+                             fn_post_hotsocket_recharge_request)
 
 
 class APITestCase(TestCase):
@@ -20,6 +22,15 @@ class APITestCase(TestCase):
 
 
 class TaskTestCase(TestCase):
+    def make_account(self, ):
+        account = Account.objects.create(
+            token='1234')
+        return account.id
+
+    def make_recharge(self, amount=100.00, msisdn="+27123", status=0):
+        airtime = Recharge.objects.create(
+            amount=amount, msisdn=msisdn, status=status)
+        return airtime.id
 
     def setUp(self):
         pass
@@ -84,17 +95,60 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
         self.assertEqual(d, 0)
 
 
+class TestRechargeFunctions(TaskTestCase):
+
+    def test_fn_return_cat(self):
+        cat = fn_return_cat('hi ', 'there')
+        self.assertEqual(cat, 'hi there')
+
+    def test_fn_get_token(self):
+        self.make_account()
+        token = fn_get_token()
+        self.assertEqual(token, '1234')
+
+    def test_fn_get_recharge(self):
+
+        recharge_id = self.make_recharge()
+        returned_recharge_data = fn_get_recharge(recharge_id)
+        self.assertEqual(returned_recharge_data.amount, 100)
+        self.assertEqual(returned_recharge_data.msisdn, '+27123')
+
+    def test_fn_post_authority(self):
+        self.make_account()
+        recharge_id = self.make_recharge()
+        returned_auth = fn_post_authority(recharge_id)
+        self.assertEqual(returned_auth["reference"], 12345)
+        self.assertEqual(returned_auth["token"], '1234')
+
+
+    @responses.activate
+    def test_fn_post_hotsocket_recharge_request(self):
+        self.make_account()
+        recharge_id = self.make_recharge()
+        expected_response_good = {
+            "response": {
+                "hotsocket_ref": 4487,
+                "serveport": 4487,
+                "message": "Successfully submitted recharge",
+                "status": "0000",
+                "token": "myprocessqueue"
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/recharge",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+
+        result = fn_post_hotsocket_recharge_request(recharge_id)
+
+        self.assertEqual(result["response"]["hotsocket_ref"], 4487)
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/recharge")
+
+
 class TestRechargeTasks(TaskTestCase):
-
-    def make_recharge(self, amount=100.00, msisdn="+27123", status=0):
-        airtime = Recharge.objects.create(
-            amount=amount, msisdn=msisdn, status=status)
-        return airtime.id
-
-    def make_account(self, ):
-        account = Account.objects.create(
-            token='1234')
-        return account.id
 
     @responses.activate
     def test_refresh_hotsocket_token_good(self):

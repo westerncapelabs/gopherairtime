@@ -9,12 +9,48 @@ from .models import Account, Recharge
 logger = get_task_logger(__name__)
 
 
+def fn_return_cat(s1, s2):
+    return s1 + s2
+
+
 def fn_get_token():
     """
     Returns the last token entry
     """
     account = Account.objects.last()
     return account.token
+
+
+def fn_get_recharge(recharge_id):
+    recharge = Recharge.objects.get(id=recharge_id)
+    return recharge
+
+
+def fn_post_authority(recharge_id):
+    token = fn_get_token()
+    recharge = fn_get_recharge(recharge_id)
+    cell_number = recharge.msisdn
+    amount = recharge.amount
+    auth = {'username': settings.HOTSOCKET_API_USERNAME,
+            'password': settings.HOTSOCKET_API_PASSWORD,
+            'as_json': True,
+            'token': token,
+            'recipient_msisdn': cell_number,
+            'product_code': 'DATA',
+            'network_code': 'VOD',
+            'denomination': amount,
+            'reference': 12345}
+    return auth
+
+
+def fn_post_hotsocket_recharge_request(recharge_id):
+    auth = fn_post_authority(recharge_id)
+    print(settings.HOTSOCKET_API_ENDPOINT)
+    recharge_post = requests.post("%s/recharge" %
+                                  settings.HOTSOCKET_API_ENDPOINT, data=auth)
+    result = recharge_post.json()
+
+    return result
 
 
 class Hotsocket_Login(Task):
@@ -91,36 +127,18 @@ class Hotsocket_Get_Airtime(Task):
         Returns the recharge model entry
         """
         l = self.get_logger(**kwargs)
-        l.info("Looking up the unprocessed requests")
-
-        token = fn_get_token()
-
-        """recharge gets entry by automatically generated id from the helper
-        function the calls msisdn to be stored msisdn variable"""
-        recharge = Recharge.objects.get(id=recharge_id)
+        recharge = fn_get_recharge(recharge_id)
         cell_number = recharge.msisdn
-        amount = recharge.amount
         status = recharge.status
-        l = self.get_logger(**kwargs)
-        l.info("Looking up hotsocket reference number and storing it")
+        result = fn_post_hotsocket_recharge_request(recharge_id)
         if status == 0:
-            auth = {'username': settings.HOTSOCKET_API_USERNAME,
-                    'password': settings.HOTSOCKET_API_PASSWORD,
-                    'as_json': True,
-                    'token': token,
-                    'recipient_msisdn': cell_number,
-                    'product_code': 'DATA',
-                    'network_code': 'VOD',
-                    'denomination': amount,
-                    'reference': 12345}
 
-            r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
-                              data=auth)
-            result = r.json()
+            l.info("Looking up the unprocessed requests")
             # change status to 1 and save status to be returned
             recharge.status = 1
             recharge.save()
 
+            l.info("Looking up hotsocket reference number and storing it")
             # Get hotsocket reference and save it to recharge then returned
             ref = result["response"]["hotsocket_ref"]
             recharge.hotsocket_ref = ref
