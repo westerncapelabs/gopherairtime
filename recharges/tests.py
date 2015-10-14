@@ -120,7 +120,6 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(returned_auth["reference"], 12345)
         self.assertEqual(returned_auth["token"], '1234')
 
-
     @responses.activate
     def test_fn_post_hotsocket_recharge_request(self):
         self.make_account()

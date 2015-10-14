@@ -130,9 +130,9 @@ class Hotsocket_Get_Airtime(Task):
         recharge = fn_get_recharge(recharge_id)
         cell_number = recharge.msisdn
         status = recharge.status
-        result = fn_post_hotsocket_recharge_request(recharge_id)
-        if status == 0:
 
+        if status == 0:
+            result = fn_post_hotsocket_recharge_request(recharge_id)
             l.info("Looking up the unprocessed requests")
             # change status to 1 and save status to be returned
             recharge.status = 1
