@@ -145,16 +145,40 @@ class TestRechargeTasks(TaskTestCase):
         tokens = Account.objects.all().count()
         self.assertEqual(tokens, 0)
 
+    @responses.activate
     def test_hotsocket_process_queue(self):
-        self.make_recharge()
-        self.make_recharge(status=1)
-        self.make_recharge(status=2)
-        self.make_recharge()
+        r1 = self.make_recharge()
+        r2 = self.make_recharge(status=1)
+        r3 = self.make_recharge(status=2)
+        r4 = self.make_recharge()
+        expected_response_good = {
+            "response": {
+                "hotsocket_ref": 4487,
+                "serveport": 4487,
+                "message": "Successfully submitted recharge",
+                "status": "0000",
+                "token": "myprocessqueue"
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/recharge",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
 
         # run the task to queue the hotsocket requests
         result = hotsocket_process_queue.delay()
-
         self.assertEqual(result.get(), "2 requests queued to Hotsocket")
+        r1 = Recharge.objects.get(id=r1)
+        r2 = Recharge.objects.get(id=r2)
+        r3 = Recharge.objects.get(id=r3)
+        r4 = Recharge.objects.get(id=r4)
+        self.assertEqual(r1.status, 0)
+        self.assertEqual(r2.status, 1)
+        self.assertEqual(r3.status, 2)
+        self.assertEqual(r4.status, 0)
+
+        self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
     def test_hotsocket_get_airtime_good(self):
