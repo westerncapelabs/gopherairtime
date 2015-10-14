@@ -9,6 +9,14 @@ from .models import Account, Recharge
 logger = get_task_logger(__name__)
 
 
+def fn_get_token():
+    """
+    Returns the last token entry
+    """
+    account = Account.objects.last()
+    return account.token
+
+
 class Hotsocket_Login(Task):
 
     """
@@ -61,19 +69,11 @@ class Hotsocket_Process_Queue(Task):
         """
         l = self.get_logger(**kwargs)
         l.info("Looking up the unprocessed requests")
-        # auth = {'username': settings.HOTSOCKET_API_USERNAME,
-        #         'password': settings.HOTSOCKET_API_PASSWORD,
-        #         'as_json': True
-        # }
-
-        # r = requests.post("%s/recharge" % settings.HOTSOCKET_API_ENDPOINT,
-        #                   data=auth)
-
         queued = Recharge.objects.filter(status=0)
         for recharge in queued:
-            print('firing a task! recharge id: , recharge.id')
-            result = hotsocket_get_airtime.delay(recharge.id)
-        return "%s requests queued to Hotsocket" % queued
+            print(recharge)
+            hotsocket_get_airtime.delay(recharge.id)
+        return "%s requests queued to Hotsocket" % queued.count()
 
 hotsocket_process_queue = Hotsocket_Process_Queue()
 
@@ -93,9 +93,7 @@ class Hotsocket_Get_Airtime(Task):
         l = self.get_logger(**kwargs)
         l.info("Looking up the unprocessed requests")
 
-        """account gets the last token entry to be stored in token variable"""
-        account = Account.objects.last()
-        token = account.token
+        token = fn_get_token()
 
         """recharge gets entry by automatically generated id from the helper
         function the calls msisdn to be stored msisdn variable"""

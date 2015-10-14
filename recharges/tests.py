@@ -147,10 +147,12 @@ class TestRechargeTasks(TaskTestCase):
 
     @responses.activate
     def test_hotsocket_process_queue(self):
+        self.make_account()
         r1 = self.make_recharge()
         r2 = self.make_recharge(status=1)
         r3 = self.make_recharge(status=2)
         r4 = self.make_recharge()
+
         expected_response_good = {
             "response": {
                 "hotsocket_ref": 4487,
@@ -173,10 +175,10 @@ class TestRechargeTasks(TaskTestCase):
         r2 = Recharge.objects.get(id=r2)
         r3 = Recharge.objects.get(id=r3)
         r4 = Recharge.objects.get(id=r4)
-        self.assertEqual(r1.status, 0)
+        self.assertEqual(r1.status, 1)
         self.assertEqual(r2.status, 1)
         self.assertEqual(r3.status, 2)
-        self.assertEqual(r4.status, 0)
+        self.assertEqual(r4.status, 1)
 
         self.assertEqual(len(responses.calls), 2)
 
