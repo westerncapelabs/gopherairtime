@@ -12,7 +12,9 @@ from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, fn_return_cat,
                              fn_get_token, fn_get_recharge, fn_post_authority,
-                             fn_post_hotsocket_recharge_request)
+                             fn_post_hotsocket_recharge_request,
+                             fn_login_authority,
+                             fn_post_hotsocket_login_request)
 
 
 class APITestCase(TestCase):
@@ -145,6 +147,39 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
+
+
+class TestLoginFunctions(TaskTestCase):
+    def test_fn_login_authority(self):
+        returned_login_auth = fn_login_authority()
+        self.assertEqual(returned_login_auth["password"], "REPLACEME")
+        self.assertEqual(returned_login_auth["username"], "REPLACEME")
+
+    @responses.activate
+    def test_fn_post_hotsocket_login_request(self):
+        expected_response_good = {
+            "response": {
+                "message": "Login Successful.",
+                "status": "0000",
+                "token": "mytesttoken"
+            }
+        }
+
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/login",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+
+        hotsocket_login_request = fn_post_hotsocket_login_request()
+
+        self.assertEqual(hotsocket_login_request["response"]["status"], "0000")
+        self.assertEqual(hotsocket_login_request["response"]["message"],
+                         "Login Successful.")
+
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/login")
 
 
 class TestRechargeTasks(TaskTestCase):

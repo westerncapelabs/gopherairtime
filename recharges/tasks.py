@@ -43,14 +43,30 @@ def fn_post_authority(recharge_id):
     return auth
 
 
+def fn_login_authority():
+    login_auth = {'username': settings.HOTSOCKET_API_USERNAME,
+                  'password': settings.HOTSOCKET_API_PASSWORD,
+                  'as_json': True}
+    return login_auth
+
+
 def fn_post_hotsocket_recharge_request(recharge_id):
     auth = fn_post_authority(recharge_id)
     print(settings.HOTSOCKET_API_ENDPOINT)
     recharge_post = requests.post("%s/recharge" %
                                   settings.HOTSOCKET_API_ENDPOINT, data=auth)
     result = recharge_post.json()
-
     return result
+
+
+def fn_post_hotsocket_login_request():
+
+    login_auth = fn_login_authority()
+    login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
+                               data=login_auth)
+    login_result = login_post.json()
+    print(login_result)
+    return login_result
 
 
 class Hotsocket_Login(Task):
@@ -65,15 +81,7 @@ class Hotsocket_Login(Task):
         Returns the token
         """
         l = self.get_logger(**kwargs)
-        l.info("Logging into hotsocket")
-
-        auth = {'username': settings.HOTSOCKET_API_USERNAME,
-                'password': settings.HOTSOCKET_API_PASSWORD,
-                'as_json': True}
-
-        r = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
-                          data=auth)
-        result = r.json()
+        result = fn_post_hotsocket_login_request()
         # Check the result
         if result["response"]["status"] == \
                 settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
