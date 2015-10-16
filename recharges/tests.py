@@ -127,9 +127,12 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(recharge.hotsocket_ref, 0)
 
     def test_prep_hotsocket_data(self):
+        # Setup
         self.make_account()
         recharge_id = self.make_recharge()
+        # Execute
         hotsocket_data = prep_hotsocket_data(recharge_id)
+        # Check
         self.assertEqual(hotsocket_data["recipient_msisdn"], "+27123")
         self.assertEqual(hotsocket_data["token"], '1234')
 
