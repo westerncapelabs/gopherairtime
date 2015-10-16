@@ -155,6 +155,18 @@ class TestLoginFunctions(TaskTestCase):
         self.assertEqual(returned_login_auth["password"], "REPLACEME")
         self.assertEqual(returned_login_auth["username"], "REPLACEME")
 
+    # def test_fn_hotsocket_login_status(self):
+    #     status = fn_hotsocket_login_status()
+    #     self.assertEqual(status, 3535464)
+
+    # def test_fn_saving_hotsocket_token(self):
+    #     saved_token = fn_saving_hotsocket_token()
+    #     self.assertEqual(saved_token, "fhfhfhfhf")
+
+    # def test_fn_hotsocket_login_token(self):
+    #     token = fn_hotsocket_login_token()
+    #     self.assertEqual(token, "fhfhfhfhf")
+
     @responses.activate
     def test_fn_post_hotsocket_login_request(self):
         expected_response_good = {
@@ -180,6 +192,7 @@ class TestLoginFunctions(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/login")
+
 
 
 class TestRechargeTasks(TaskTestCase):

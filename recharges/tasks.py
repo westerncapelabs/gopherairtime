@@ -65,8 +65,27 @@ def fn_post_hotsocket_login_request():
     login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
                                data=login_auth)
     login_result = login_post.json()
-    print(login_result)
     return login_result
+
+
+def fn_hotsocket_login_status():
+    status_result = fn_post_hotsocket_login_request()
+    recieved_status = status_result["response"]["status"]
+    return recieved_status
+
+
+def fn_hotsocket_login_token():
+    token_result = fn_post_hotsocket_login_request()
+    recieved_token = token_result["response"]["token"]
+    return recieved_token
+
+
+def fn_saving_hotsocket_token():
+    token = fn_hotsocket_login_token()
+    account = Account()
+    account.token = token
+    account.save()
+    return "Saved token entry into account"
 
 
 class Hotsocket_Login(Task):
@@ -77,20 +96,14 @@ class Hotsocket_Login(Task):
     name = "recharges.tasks.hotsocket_login"
 
     def run(self, **kwargs):
-        """
-        Returns the token
-        """
+
         l = self.get_logger(**kwargs)
-        result = fn_post_hotsocket_login_request()
+        status = fn_hotsocket_login_status()
         # Check the result
-        if result["response"]["status"] == \
+        if status == \
                 settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
             l.info("Successful login to hotsocket")
-            # Store the result for other tasks to use
-            token = result["response"]["token"]
-            account = Account()
-            account.token = token
-            account.save()
+            fn_saving_hotsocket_token()
             return True
         else:
             l.error("Failed login to hotsocket")
