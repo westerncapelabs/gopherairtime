@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
-                             hotsocket_get_airtime, fn_return_cat,
+                             hotsocket_get_airtime,
                              fn_get_token, fn_get_recharge, fn_post_authority,
                              fn_post_hotsocket_recharge_request,
                              fn_login_authority,
@@ -98,10 +98,6 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
 
 class TestRechargeFunctions(TaskTestCase):
-
-    def test_fn_return_cat(self):
-        cat = fn_return_cat('hi ', 'there')
-        self.assertEqual(cat, 'hi there')
 
     def test_fn_get_token(self):
         self.make_account()

@@ -9,10 +9,6 @@ from .models import Account, Recharge
 logger = get_task_logger(__name__)
 
 
-def fn_return_cat(s1, s2):
-    return s1 + s2
-
-
 def fn_get_token():
     """
     Returns the last token entry
