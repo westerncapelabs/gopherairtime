@@ -17,14 +17,14 @@ def get_token():
     return account.token
 
 
-def fn_get_recharge(recharge_id):
+def get_recharge(recharge_id):
     recharge = Recharge.objects.get(id=recharge_id)
     return recharge
 
 
 def fn_post_authority(recharge_id):
     token = get_token()
-    recharge = fn_get_recharge(recharge_id)
+    recharge = get_recharge(recharge_id)
     cell_number = recharge.msisdn
     amount = recharge.amount
     auth = {'username': settings.HOTSOCKET_API_USERNAME,
@@ -144,7 +144,7 @@ class Hotsocket_Get_Airtime(Task):
         Returns the recharge model entry
         """
         l = self.get_logger(**kwargs)
-        recharge = fn_get_recharge(recharge_id)
+        recharge = get_recharge(recharge_id)
         cell_number = recharge.msisdn
         status = recharge.status
 

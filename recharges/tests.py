@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
-                             hotsocket_get_airtime, get_token, fn_get_recharge,
+                             hotsocket_get_airtime, get_token, get_recharge,
                              fn_post_authority,
                              fn_post_hotsocket_recharge_request,
                              fn_login_authority,
@@ -115,12 +115,16 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(token, '5555')
 
-    def test_fn_get_recharge(self):
-
+    def test_get_recharge(self):
+        # Setup
         recharge_id = self.make_recharge()
-        returned_recharge_data = fn_get_recharge(recharge_id)
-        self.assertEqual(returned_recharge_data.amount, 100)
-        self.assertEqual(returned_recharge_data.msisdn, '+27123')
+        # Execute
+        recharge = get_recharge(recharge_id)
+        # Check
+        self.assertEqual(recharge.amount, 100)
+        self.assertEqual(recharge.msisdn, '+27123')
+        self.assertEqual(recharge.status, 0)
+        self.assertEqual(recharge.hotsocket_ref, 0)
 
     def test_fn_post_authority(self):
         self.make_account()
