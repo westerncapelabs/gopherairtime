@@ -9,11 +9,11 @@ from .models import Account, Recharge
 logger = get_task_logger(__name__)
 
 
-def fn_get_token():
+def get_token():
     """
     Returns the last token entry
     """
-    account = Account.objects.last()
+    account = Account.objects.order_by('created_at').last()
     return account.token
 
 
@@ -23,7 +23,7 @@ def fn_get_recharge(recharge_id):
 
 
 def fn_post_authority(recharge_id):
-    token = fn_get_token()
+    token = get_token()
     recharge = fn_get_recharge(recharge_id)
     cell_number = recharge.msisdn
     amount = recharge.amount
@@ -170,6 +170,5 @@ class Hotsocket_Get_Airtime(Task):
             return "airtime request for %s failed" % cell_number
         elif status == 4:
             return "airtime request for %s is unrecoverable" % cell_number
-
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()

@@ -10,8 +10,8 @@ from rest_framework.authtoken.models import Token
 
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
-                             hotsocket_get_airtime,
-                             fn_get_token, fn_get_recharge, fn_post_authority,
+                             hotsocket_get_airtime, get_token, fn_get_recharge,
+                             fn_post_authority,
                              fn_post_hotsocket_recharge_request,
                              fn_login_authority,
                              fn_post_hotsocket_login_request)
@@ -24,9 +24,9 @@ class APITestCase(TestCase):
 
 
 class TaskTestCase(TestCase):
-    def make_account(self, ):
-        account = Account.objects.create(
-            token='1234')
+
+    def make_account(self, token='1234'):
+        account = Account.objects.create(token=token)
         return account.id
 
     def make_recharge(self, amount=100.00, msisdn="+27123", status=0):
@@ -99,10 +99,21 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
 class TestRechargeFunctions(TaskTestCase):
 
-    def test_fn_get_token(self):
+    def test_get_token(self):
+        # Run the twice to check latest token is being found
+        # Setup
         self.make_account()
-        token = fn_get_token()
+        # Execute
+        token = get_token()
+        # Check
         self.assertEqual(token, '1234')
+
+        # Setup
+        self.make_account(token='5555')
+        # Execute
+        token = get_token()
+        # Check
+        self.assertEqual(token, '5555')
 
     def test_fn_get_recharge(self):
 
@@ -188,7 +199,6 @@ class TestLoginFunctions(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/login")
-
 
 
 class TestRechargeTasks(TaskTestCase):
