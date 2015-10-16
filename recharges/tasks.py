@@ -18,11 +18,17 @@ def get_token():
 
 
 def get_recharge(recharge_id):
+    """
+    Returns the recharge object from its id
+    """
     recharge = Recharge.objects.get(id=recharge_id)
     return recharge
 
 
 def prep_hotsocket_data(recharge_id):
+    """
+    Constructs the dict needed to make a hotsocket airtime request
+    """
     recharge = get_recharge(recharge_id)
     hotsocket_data = {
         'username': settings.HOTSOCKET_API_USERNAME,
