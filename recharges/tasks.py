@@ -22,21 +22,20 @@ def get_recharge(recharge_id):
     return recharge
 
 
-def fn_post_authority(recharge_id):
-    token = get_token()
+def prep_hotsocket_data(recharge_id):
     recharge = get_recharge(recharge_id)
-    cell_number = recharge.msisdn
-    amount = recharge.amount
-    auth = {'username': settings.HOTSOCKET_API_USERNAME,
-            'password': settings.HOTSOCKET_API_PASSWORD,
-            'as_json': True,
-            'token': token,
-            'recipient_msisdn': cell_number,
-            'product_code': 'DATA',
-            'network_code': 'VOD',
-            'denomination': amount,
-            'reference': 12345}
-    return auth
+    hotsocket_data = {
+        'username': settings.HOTSOCKET_API_USERNAME,
+        'password': settings.HOTSOCKET_API_PASSWORD,
+        'as_json': True,
+        'token': get_token(),
+        'recipient_msisdn': recharge.msisdn,
+        'product_code': 'DATA',
+        'network_code': 'VOD',
+        'denomination': recharge.amount,
+        'reference': recharge.id
+    }  # TODO: check if hotsocket can handle length & chars (Trello)
+    return hotsocket_data
 
 
 def fn_login_authority():
@@ -47,10 +46,10 @@ def fn_login_authority():
 
 
 def fn_post_hotsocket_recharge_request(recharge_id):
-    auth = fn_post_authority(recharge_id)
-    print(settings.HOTSOCKET_API_ENDPOINT)
+    hotsocket_data = prep_hotsocket_data(recharge_id)
     recharge_post = requests.post("%s/recharge" %
-                                  settings.HOTSOCKET_API_ENDPOINT, data=auth)
+                                  settings.HOTSOCKET_API_ENDPOINT,
+                                  data=hotsocket_data)
     result = recharge_post.json()
     return result
 
