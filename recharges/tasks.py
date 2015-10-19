@@ -171,3 +171,21 @@ class Hotsocket_Get_Airtime(Task):
             return "airtime request for %s is unrecoverable" % cell_number
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
+
+
+class Check_Hotsocket_Status(Task):
+    """
+    Task to check hotsocket recharge request and sets the recharge model
+    status to successful if the airtime has been loaded to the user's phone.
+    """
+    name = "recharges.tasks.Check_Hotsocket_Status"
+
+    def run(self, recharge_id, **kwargs):
+        # Call the hotsocket_get_airtime task to get current status
+        # Delay for a couple of minutes
+        # Return "recharge is succesful" if the recharge request went through
+        # Else return  "recharge is in process"
+        # Return status.
+        return "recharge for 073 405 6879 is succesful"
+
+hotsocket_status = Check_Hotsocket_Status()

@@ -14,7 +14,8 @@ from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              prep_hotsocket_data, prep_login_data,
                              request_hotsocket_login,
                              request_hotsocket_recharge,
-                             update_recharge_status_hotsocket_ref)
+                             update_recharge_status_hotsocket_ref,
+                             hotsocket_status)
 
 
 class APITestCase(TestCase):
@@ -378,3 +379,8 @@ class TestRechargeTasks(TaskTestCase):
         # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is unrecoverable")
+
+    def test_Check_Hotsocket_Status(self):
+        recharge_id = self.make_recharge()
+        result = hotsocket_status(recharge_id)
+        self.assertEqual(result, "recharge for 073 405 6879 is succesful")
