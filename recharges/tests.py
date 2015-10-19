@@ -13,7 +13,8 @@ from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
                              prep_hotsocket_data, prep_login_data,
                              request_hotsocket_login,
-                             request_hotsocket_recharge)
+                             request_hotsocket_recharge,
+                             update_recharge_status_hotsocket_ref)
 
 
 class APITestCase(TestCase):
@@ -194,6 +195,23 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
+
+    def test_update_recharge_status_hotsocket_ref(self):
+        # Setup
+        recharge_id = self.make_recharge()
+        result = {
+            "response": {
+                "hotsocket_ref": 555
+            }
+        }
+        recharge = Recharge.objects.get(id=recharge_id)
+        # Execute
+        hotsocket_ref = update_recharge_status_hotsocket_ref(recharge, result)
+        # Check
+        self.assertEqual(hotsocket_ref, 555)
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 1)
+        self.assertEqual(recharge.hotsocket_ref, 555)
 
 
 class TestRechargeTasks(TaskTestCase):

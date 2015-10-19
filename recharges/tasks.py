@@ -75,6 +75,17 @@ def request_hotsocket_recharge(recharge_id):
     return recharge_post.json()
 
 
+def update_recharge_status_hotsocket_ref(recharge, result):
+    """
+    Set recharge object status to In Process and save the hotsocket reference.
+    """
+    recharge.status = 1
+    hotsocket_ref = result["response"]["hotsocket_ref"]
+    recharge.hotsocket_ref = hotsocket_ref
+    recharge.save()
+    return hotsocket_ref
+
+
 class Hotsocket_Login(Task):
 
     """
@@ -141,19 +152,15 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
 
         if status == 0:
+            l.info("Making hotsocket recharge request")
             result = request_hotsocket_recharge(recharge_id)
-            l.info("Looking up the unprocessed requests")
-            # change status to 1 and save status to be returned
-            recharge.status = 1
-            recharge.save()
 
-            l.info("Looking up hotsocket reference number and storing it")
-            # Get hotsocket reference and save it to recharge then returned
-            ref = result["response"]["hotsocket_ref"]
-            recharge.hotsocket_ref = ref
-            recharge.save()
+            l.info("Updating recharge object status and hotsocket_ref")
+            hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
+                                                                 result)
+
             return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
-                                                                 ref)
+                                                                 hotsocket_ref)
         elif status == 1:
             return "airtime request for %s in process" % cell_number
         elif status == 2:
