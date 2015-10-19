@@ -218,7 +218,7 @@ class TestRechargeTasks(TaskTestCase):
 
     @responses.activate
     def test_refresh_hotsocket_token_good(self):
-
+        # Setup
         expected_response_good = {
             "response": {
                 "message": "Login Successful.",
@@ -233,9 +233,9 @@ class TestRechargeTasks(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
 
-        # run the task to refresh the token
+        # Execute
         result = hotsocket_login.delay()
-
+        # Check
         self.assertEqual(result.get(), True)
 
         t = Account.objects.last()
@@ -243,7 +243,7 @@ class TestRechargeTasks(TaskTestCase):
 
     @responses.activate
     def test_refresh_hotsocket_token_bad(self):
-
+        # Setup
         expected_response_bad = {
             "response": {
                 "message": "Login Failure. Incorrect Username or Password.",
@@ -257,9 +257,9 @@ class TestRechargeTasks(TaskTestCase):
             json.dumps(expected_response_bad),
             status=200, content_type='application/json')
 
-        # run the task to refresh the token
+        # Execute
         result = hotsocket_login.delay()
-
+        # Check
         self.assertEqual(result.get(), False)
 
         tokens = Account.objects.all().count()
@@ -267,6 +267,7 @@ class TestRechargeTasks(TaskTestCase):
 
     @responses.activate
     def test_hotsocket_process_queue(self):
+        # Setup
         self.make_account()
         r1 = self.make_recharge()
         r2 = self.make_recharge(status=1)
@@ -288,8 +289,9 @@ class TestRechargeTasks(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
 
-        # run the task to queue the hotsocket requests
+        # Execute
         result = hotsocket_process_queue.delay()
+        # Check
         self.assertEqual(result.get(), "2 requests queued to Hotsocket")
         r1 = Recharge.objects.get(id=r1)
         r2 = Recharge.objects.get(id=r2)
@@ -304,6 +306,7 @@ class TestRechargeTasks(TaskTestCase):
 
     @responses.activate
     def test_hotsocket_get_airtime_good(self):
+        # Setup
         self.make_account()
 
         expected_response_good = {
@@ -322,7 +325,9 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         recharge_id = self.make_recharge(msisdn="+277244555", status=0)
+        # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
+        # Check
         self.assertEqual(result.get(),
                          "Recharge for +277244555: Queued at Hotsocket #4487")
         recharge = Recharge.objects.get(id=recharge_id)
@@ -335,29 +340,41 @@ class TestRechargeTasks(TaskTestCase):
                          "http://test-hotsocket/recharge")
 
     def test_hotsocket_get_airtime_in_process(self):
+        # Setup
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=1)
+        # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
+        # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 in process")
 
     def test_hotsocket_get_airtime_successful(self):
+        # Setup
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=2)
+        # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
+        # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is successful")
 
     def test_hotsocket_get_airtime_failed(self):
+        # Setup
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=3)
+        # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
+        # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 failed")
 
     def test_hotsocket_get_airtime_unrecoverable(self):
+        # Setup
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=4)
+        # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
+        # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is unrecoverable")
