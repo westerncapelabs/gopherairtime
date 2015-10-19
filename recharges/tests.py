@@ -11,9 +11,8 @@ from rest_framework.authtoken.models import Token
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
-                             prep_hotsocket_data,
+                             prep_hotsocket_data, prep_login_data,
                              fn_post_hotsocket_recharge_request,
-                             fn_login_authority,
                              fn_post_hotsocket_login_request)
 
 
@@ -136,6 +135,14 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(hotsocket_data["recipient_msisdn"], "+27123")
         self.assertEqual(hotsocket_data["token"], '1234')
 
+    def test_prep_login_data(self):
+        # Setup
+        # Execute
+        login_data = prep_login_data()
+        # Check
+        self.assertEqual(login_data["password"], "REPLACEME")
+        self.assertEqual(login_data["username"], "REPLACEME")
+
     @responses.activate
     def test_fn_post_hotsocket_recharge_request(self):
         self.make_account()
@@ -164,10 +171,7 @@ class TestRechargeFunctions(TaskTestCase):
 
 
 class TestLoginFunctions(TaskTestCase):
-    def test_fn_login_authority(self):
-        returned_login_auth = fn_login_authority()
-        self.assertEqual(returned_login_auth["password"], "REPLACEME")
-        self.assertEqual(returned_login_auth["username"], "REPLACEME")
+
 
     # def test_fn_hotsocket_login_status(self):
     #     status = fn_hotsocket_login_status()

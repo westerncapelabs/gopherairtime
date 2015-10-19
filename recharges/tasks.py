@@ -44,11 +44,14 @@ def prep_hotsocket_data(recharge_id):
     return hotsocket_data
 
 
-def fn_login_authority():
-    login_auth = {'username': settings.HOTSOCKET_API_USERNAME,
+def prep_login_data():
+    """
+    Constructs the dict needed for hotsocket login
+    """
+    login_data = {'username': settings.HOTSOCKET_API_USERNAME,
                   'password': settings.HOTSOCKET_API_PASSWORD,
                   'as_json': True}
-    return login_auth
+    return login_data
 
 
 def fn_post_hotsocket_recharge_request(recharge_id):
@@ -61,10 +64,9 @@ def fn_post_hotsocket_recharge_request(recharge_id):
 
 
 def fn_post_hotsocket_login_request():
-
-    login_auth = fn_login_authority()
+    login_data = prep_login_data()
     login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
-                               data=login_auth)
+                               data=login_data)
     login_result = login_post.json()
     return login_result
 
