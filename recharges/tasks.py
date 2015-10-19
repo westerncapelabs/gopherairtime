@@ -25,6 +25,26 @@ def get_recharge(recharge_id):
     return recharge
 
 
+def prep_login_data():
+    """
+    Constructs the dict needed for hotsocket login
+    """
+    login_data = {'username': settings.HOTSOCKET_API_USERNAME,
+                  'password': settings.HOTSOCKET_API_PASSWORD,
+                  'as_json': True}
+    return login_data
+
+
+def request_hotsocket_login():
+    """
+    Hotsocket login via post request
+    """
+    login_data = prep_login_data()
+    login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
+                               data=login_data)
+    return login_post.json()
+
+
 def prep_hotsocket_data(recharge_id):
     """
     Constructs the dict needed to make a hotsocket airtime request
@@ -44,33 +64,15 @@ def prep_hotsocket_data(recharge_id):
     return hotsocket_data
 
 
-def prep_login_data():
+def request_hotsocket_recharge(recharge_id):
     """
-    Constructs the dict needed for hotsocket login
+    Makes hotsocket airtime request
     """
-    login_data = {'username': settings.HOTSOCKET_API_USERNAME,
-                  'password': settings.HOTSOCKET_API_PASSWORD,
-                  'as_json': True}
-    return login_data
-
-
-def request_hotsocket_login():
-    """
-    Attempts hotsocket login via post request
-    """
-    login_data = prep_login_data()
-    login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
-                               data=login_data)
-    return login_post.json()
-
-
-def fn_post_hotsocket_recharge_request(recharge_id):
     hotsocket_data = prep_hotsocket_data(recharge_id)
     recharge_post = requests.post("%s/recharge" %
                                   settings.HOTSOCKET_API_ENDPOINT,
                                   data=hotsocket_data)
-    result = recharge_post.json()
-    return result
+    return recharge_post.json()
 
 
 class Hotsocket_Login(Task):
@@ -139,7 +141,7 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
 
         if status == 0:
-            result = fn_post_hotsocket_recharge_request(recharge_id)
+            result = request_hotsocket_recharge(recharge_id)
             l.info("Looking up the unprocessed requests")
             # change status to 1 and save status to be returned
             recharge.status = 1
