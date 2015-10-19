@@ -12,8 +12,8 @@ from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
                              prep_hotsocket_data, prep_login_data,
-                             fn_post_hotsocket_recharge_request,
-                             fn_post_hotsocket_login_request)
+                             request_hotsocket_login,
+                             fn_post_hotsocket_recharge_request)
 
 
 class APITestCase(TestCase):
@@ -144,6 +144,31 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(login_data["username"], "REPLACEME")
 
     @responses.activate
+    def test_request_hotsocket_login(self):
+        # Setup
+        expected_response_good = {
+            "response": {
+                "message": "Login Successful.",
+                "status": "0000",
+                "token": "mytesttoken"
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/login",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+        # Execute
+        login_result = request_hotsocket_login()
+        # Check
+        self.assertEqual(login_result["response"]["status"], "0000")
+        self.assertEqual(login_result["response"]["message"],
+                         "Login Successful.")
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/login")
+
+    @responses.activate
     def test_fn_post_hotsocket_recharge_request(self):
         self.make_account()
         recharge_id = self.make_recharge()
@@ -168,48 +193,6 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
-
-
-class TestLoginFunctions(TaskTestCase):
-
-
-    # def test_fn_hotsocket_login_status(self):
-    #     status = fn_hotsocket_login_status()
-    #     self.assertEqual(status, 3535464)
-
-    # def test_fn_saving_hotsocket_token(self):
-    #     saved_token = fn_saving_hotsocket_token()
-    #     self.assertEqual(saved_token, "fhfhfhfhf")
-
-    # def test_fn_hotsocket_login_token(self):
-    #     token = fn_hotsocket_login_token()
-    #     self.assertEqual(token, "fhfhfhfhf")
-
-    @responses.activate
-    def test_fn_post_hotsocket_login_request(self):
-        expected_response_good = {
-            "response": {
-                "message": "Login Successful.",
-                "status": "0000",
-                "token": "mytesttoken"
-            }
-        }
-
-        responses.add(
-            responses.POST,
-            "http://test-hotsocket/login",
-            json.dumps(expected_response_good),
-            status=200, content_type='application/json')
-
-        hotsocket_login_request = fn_post_hotsocket_login_request()
-
-        self.assertEqual(hotsocket_login_request["response"]["status"], "0000")
-        self.assertEqual(hotsocket_login_request["response"]["message"],
-                         "Login Successful.")
-
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url,
-                         "http://test-hotsocket/login")
 
 
 class TestRechargeTasks(TaskTestCase):

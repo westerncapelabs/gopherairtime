@@ -54,6 +54,16 @@ def prep_login_data():
     return login_data
 
 
+def request_hotsocket_login():
+    """
+    Attempts hotsocket login via post request
+    """
+    login_data = prep_login_data()
+    login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
+                               data=login_data)
+    return login_post.json()
+
+
 def fn_post_hotsocket_recharge_request(recharge_id):
     hotsocket_data = prep_hotsocket_data(recharge_id)
     recharge_post = requests.post("%s/recharge" %
@@ -61,34 +71,6 @@ def fn_post_hotsocket_recharge_request(recharge_id):
                                   data=hotsocket_data)
     result = recharge_post.json()
     return result
-
-
-def fn_post_hotsocket_login_request():
-    login_data = prep_login_data()
-    login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
-                               data=login_data)
-    login_result = login_post.json()
-    return login_result
-
-
-def fn_hotsocket_login_status():
-    status_result = fn_post_hotsocket_login_request()
-    recieved_status = status_result["response"]["status"]
-    return recieved_status
-
-
-def fn_hotsocket_login_token():
-    token_result = fn_post_hotsocket_login_request()
-    recieved_token = token_result["response"]["token"]
-    return recieved_token
-
-
-def fn_saving_hotsocket_token():
-    token = fn_hotsocket_login_token()
-    account = Account()
-    account.token = token
-    account.save()
-    return "Saved token entry into account"
 
 
 class Hotsocket_Login(Task):
@@ -101,12 +83,13 @@ class Hotsocket_Login(Task):
     def run(self, **kwargs):
 
         l = self.get_logger(**kwargs)
-        status = fn_hotsocket_login_status()
+        login_result = request_hotsocket_login()
+        status = login_result["response"]["status"]
         # Check the result
         if status == \
                 settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
             l.info("Successful login to hotsocket")
-            fn_saving_hotsocket_token()
+            Account.objects.create(token=login_result["response"]["token"])
             return True
         else:
             l.error("Failed login to hotsocket")
