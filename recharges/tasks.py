@@ -162,7 +162,8 @@ class Hotsocket_Get_Airtime(Task):
             return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
                                                                  hotsocket_ref)
         elif status == 1:
-            return "airtime request for %s already in process by another worker" % cell_number
+            return "airtime request for %s already in process by another"\
+                " worker" % cell_number
         elif status == 2:
             return "airtime request for %s is successful" % cell_number
         elif status == 3:

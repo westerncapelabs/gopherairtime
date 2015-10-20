@@ -346,7 +346,8 @@ class TestRechargeTasks(TaskTestCase):
         result = hotsocket_get_airtime.delay(recharge_id)
         # Check
         self.assertEqual(result.get(),
-                         "airtime request for +277244555 already in process by another worker")
+                         "airtime request for +277244555 already in process"
+                         " by another worker")
 
     def test_hotsocket_get_airtime_successful(self):
         # Setup
