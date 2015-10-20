@@ -151,7 +151,7 @@ class Hotsocket_Get_Airtime(Task):
         cell_number = recharge.msisdn
         status = recharge.status
 
-        if status == 0:
+        if status == 1:
             l.info("Making hotsocket recharge request")
             result = request_hotsocket_recharge(recharge_id)
 
