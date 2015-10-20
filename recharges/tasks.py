@@ -79,7 +79,6 @@ def update_recharge_status_hotsocket_ref(recharge, result):
     """
     Set recharge object status to In Process and save the hotsocket reference.
     """
-    recharge.status = 1
     hotsocket_ref = result["response"]["hotsocket_ref"]
     recharge.hotsocket_ref = hotsocket_ref
     recharge.save()
@@ -154,7 +153,8 @@ class Hotsocket_Get_Airtime(Task):
         if status == 1:
             l.info("Making hotsocket recharge request")
             result = request_hotsocket_recharge(recharge_id)
-
+            recharge.status = 1
+            recharge.save()
             l.info("Updating recharge object status and hotsocket_ref")
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
                                                                  result)
