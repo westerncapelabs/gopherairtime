@@ -150,16 +150,16 @@ class Hotsocket_Get_Airtime(Task):
         cell_number = recharge.msisdn
         status = recharge.status
 
-        if status == 1:
+        if status == 0:
+            recharge.status = 1
+            recharge.save()
 
             l.info("Making hotsocket recharge request")
             result = request_hotsocket_recharge(recharge_id)
-            recharge.status = 1
-            recharge.save()
+
             l.info("Updating recharge object status and hotsocket_ref")
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
                                                                  result)
-
             return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
                                                                  hotsocket_ref)
         elif status == 1:
