@@ -56,11 +56,11 @@ def prep_hotsocket_data(recharge_id):
         'as_json': True,
         'token': get_token(),
         'recipient_msisdn': recharge.msisdn,
-        'product_code': 'DATA',
-        'network_code': 'VOD',
+        'product_code': 'DATA',  # TODO: needs to be dynamically set
+        'network_code': 'VOD',  # TODO: needs to be dynamically set
         'denomination': recharge.amount,
         'reference': recharge.id
-    }  # TODO: check if hotsocket can handle length & chars (Trello)
+    }
     return hotsocket_data
 
 
