@@ -383,4 +383,4 @@ class TestRechargeTasks(TaskTestCase):
     def test_Check_Hotsocket_Status(self):
         recharge_id = self.make_recharge()
         result = hotsocket_status(recharge_id)
-        self.assertEqual(result, "recharge for 073 405 6879 is succesful")
+        self.assertEqual(result, "recharge is succesful")

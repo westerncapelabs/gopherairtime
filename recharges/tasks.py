@@ -181,11 +181,10 @@ class Check_Hotsocket_Status(Task):
     name = "recharges.tasks.Check_Hotsocket_Status"
 
     def run(self, recharge_id, **kwargs):
-        # Call the hotsocket_get_airtime task to get current status
-        # Delay for a couple of minutes
+        # Fire hotsocket_get_airtime task delay it for a couple of minutes
+        # Loop through hotsocket_get_airtime task and get current status
         # Return "recharge is succesful" if the recharge request went through
-        # Else return  "recharge is in process"
-        # Return status.
+        # Else return  any current status
         return "recharge for 073 405 6879 is succesful"
 
 hotsocket_status = Check_Hotsocket_Status()
