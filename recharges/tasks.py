@@ -61,7 +61,7 @@ def prep_hotsocket_data(recharge_id):
         # TODO: Issue-37 to dynamically set network code
         'network_code': 'VOD',
         'denomination': recharge.amount,
-        'reference': recharge.id
+        'reference': recharge.id + settings.HOTSOCKET_DEFAULT_VALUE
     }
     return hotsocket_data
 
