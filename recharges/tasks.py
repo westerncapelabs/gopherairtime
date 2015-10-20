@@ -59,7 +59,7 @@ def prep_hotsocket_data(recharge_id):
         'product_code': 'DATA',  # TODO: Issue to dynamically set product code
         'network_code': 'VOD',  # TODO: Issue to dynamically set network code
         'denomination': recharge.amount,
-        'reference': recharge.id
+        'reference': recharge.id  # Set default value to 1000
     }
     return hotsocket_data
 
@@ -126,7 +126,6 @@ class Hotsocket_Process_Queue(Task):
         l.info("Looking up the unprocessed requests")
         queued = Recharge.objects.filter(status=0)
         for recharge in queued:
-            print(recharge)
             hotsocket_get_airtime.delay(recharge.id)
         return "%s requests queued to Hotsocket" % queued.count()
 
