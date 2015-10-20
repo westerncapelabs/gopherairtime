@@ -158,6 +158,7 @@ class Hotsocket_Get_Airtime(Task):
             l.info("Updating recharge object status and hotsocket_ref")
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
                                                                  result)
+            # Fire check_hotsocket_status task with a delay of 5 minutes
 
             return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
                                                                  hotsocket_ref)
@@ -181,7 +182,6 @@ class Check_Hotsocket_Status(Task):
     name = "recharges.tasks.Check_Hotsocket_Status"
 
     def run(self, recharge_id, **kwargs):
-        # Fire hotsocket_get_airtime task delay it for a couple of minutes
         # Loop through hotsocket_get_airtime task and get current status
         # Return "recharge is succesful" if the recharge request went through
         # Else return  any current status
