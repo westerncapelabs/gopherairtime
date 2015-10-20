@@ -56,10 +56,12 @@ def prep_hotsocket_data(recharge_id):
         'as_json': True,
         'token': get_token(),
         'recipient_msisdn': recharge.msisdn,
-        'product_code': 'DATA',  # TODO: Issue to dynamically set product code
-        'network_code': 'VOD',  # TODO: Issue to dynamically set network code
+        # TODO: Issue-37 to dynamically set product code
+        'product_code': 'DATA',
+        # TODO: Issue-37 to dynamically set network code
+        'network_code': 'VOD',
         'denomination': recharge.amount,
-        'reference': recharge.id  # Set default value to 1000
+        'reference': recharge.id
     }
     return hotsocket_data
 
