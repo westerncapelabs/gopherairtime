@@ -151,6 +151,7 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
 
         if status == 1:
+
             l.info("Making hotsocket recharge request")
             result = request_hotsocket_recharge(recharge_id)
             recharge.status = 1
@@ -162,7 +163,7 @@ class Hotsocket_Get_Airtime(Task):
             return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
                                                                  hotsocket_ref)
         elif status == 1:
-            return "airtime request for %s in process" % cell_number
+            return "airtime request for %s already in process by another worker" % cell_number
         elif status == 2:
             return "airtime request for %s is successful" % cell_number
         elif status == 3:
