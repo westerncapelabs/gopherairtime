@@ -141,8 +141,8 @@ class TestRechargeFunctions(TaskTestCase):
         # Execute
         login_data = prep_login_data()
         # Check
-        self.assertEqual(login_data["password"], "REPLACEME")
-        self.assertEqual(login_data["username"], "REPLACEME")
+        self.assertEqual(login_data["password"], "Replaceme_password")
+        self.assertEqual(login_data["username"], "Replaceme_username")
 
     @responses.activate
     def test_request_hotsocket_login(self):
