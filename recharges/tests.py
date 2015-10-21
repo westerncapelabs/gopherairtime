@@ -135,6 +135,7 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(hotsocket_data["recipient_msisdn"], "+27123")
         self.assertEqual(hotsocket_data["token"], '1234')
+        self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
 
     def test_prep_login_data(self):
         # Setup
