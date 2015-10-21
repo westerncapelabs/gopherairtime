@@ -16,14 +16,14 @@ class Recharge(models.Model):
         ('CELLC', 'CellC'),
         ('MTN', 'MTN'),
         ('TELKOM', 'Telkom Mobile'))
-    network_operator = models.CharField(network_codes=network_choices,
-                                        default=None)
+    network_operator = models.CharField(choices=network_choices,
+                                        default=None, max_length=20)
     product_choices = (
         ('DATA', 'DATA Bundle'),
         ('SMS', 'SMS Bundle'),
         ('AIRTIME', 'AIRTIME Bundle'))
-    recharge_type = models.CharField(product_codes=product_choices,
-                                     default='AIRTIME')
+    recharge_type = models.CharField(choices=product_choices,
+                                     default='AIRTIME', max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
