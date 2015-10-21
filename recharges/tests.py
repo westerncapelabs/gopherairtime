@@ -11,8 +11,6 @@ from rest_framework.authtoken.models import Token
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
-                             prep_login_data,
-                             request_hotsocket_login,
                              update_recharge_status_hotsocket_ref)
 
 
@@ -139,7 +137,7 @@ class TestRechargeFunctions(TaskTestCase):
     def test_prep_login_data(self):
         # Setup
         # Execute
-        login_data = prep_login_data()
+        login_data = hotsocket_login.prep_login_data()
         # Check
         self.assertEqual(login_data["password"], "Replaceme_password")
         self.assertEqual(login_data["username"], "Replaceme_username")
@@ -160,7 +158,7 @@ class TestRechargeFunctions(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
         # Execute
-        login_result = request_hotsocket_login()
+        login_result = hotsocket_login.request_hotsocket_login()
         # Check
         self.assertEqual(login_result["response"]["status"], "0000")
         self.assertEqual(login_result["response"]["message"],

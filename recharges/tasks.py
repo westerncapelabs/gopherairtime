@@ -25,28 +25,6 @@ def get_recharge(recharge_id):
     return recharge
 
 
-def prep_login_data():
-    """
-    Constructs the dict needed for hotsocket login
-    """
-    login_data = {'username': settings.HOTSOCKET_API_USERNAME,
-                  'password': settings.HOTSOCKET_API_PASSWORD,
-                  'as_json': True}
-    return login_data
-
-
-def request_hotsocket_login():
-    """
-    Hotsocket login via post request
-    """
-    login_data = prep_login_data()
-    login_post = requests.post("%s/login" % settings.HOTSOCKET_API_ENDPOINT,
-                               data=login_data)
-    return login_post.json()
-
-
-
-
 def update_recharge_status_hotsocket_ref(recharge, result):
     """
     Set recharge object status to In Process and save the hotsocket reference.
@@ -64,10 +42,29 @@ class Hotsocket_Login(Task):
     """
     name = "recharges.tasks.hotsocket_login"
 
+    def prep_login_data(self):
+        """
+        Constructs the dict needed for hotsocket login
+        """
+        login_data = {'username': settings.HOTSOCKET_API_USERNAME,
+                      'password': settings.HOTSOCKET_API_PASSWORD,
+                      'as_json': True}
+        return login_data
+
+    def request_hotsocket_login(self):
+        """
+        Hotsocket login via post request
+        """
+        login_data = self.prep_login_data()
+        login_post = requests.post("%s/login" %
+                                   settings.HOTSOCKET_API_ENDPOINT,
+                                   data=login_data)
+        return login_post.json()
+
     def run(self, **kwargs):
 
         l = self.get_logger(**kwargs)
-        login_result = request_hotsocket_login()
+        login_result = self.request_hotsocket_login()
         status = login_result["response"]["status"]
         # Check the result
         if status == settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
