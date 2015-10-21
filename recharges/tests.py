@@ -178,7 +178,7 @@ class TestRechargeFunctions(TaskTestCase):
         expected_response_good = {
             "response": {
                 "hotsocket_ref": 4487,
-                "serveport": 4487,
+                "serveport_ref": 4487,
                 "message": "Successfully submitted recharge",
                 "status": "0000",
                 "token": "myprocessqueue"
@@ -312,7 +312,7 @@ class TestRechargeTasks(TaskTestCase):
         expected_response_good = {
             "response": {
                 "hotsocket_ref": 4487,
-                "serveport": 4487,
+                "serveport_ref": 4487,
                 "message": "Successfully submitted recharge",
                 "status": "0000",
                 "token": "myprocessqueue"
