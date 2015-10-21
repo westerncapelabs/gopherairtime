@@ -145,7 +145,6 @@ class Hotsocket_Get_Airtime(Task):
         """
         l = self.get_logger(**kwargs)
         recharge = get_recharge(recharge_id)
-        cell_number = recharge.msisdn
         status = recharge.status
 
         if status == 0:
@@ -158,16 +157,16 @@ class Hotsocket_Get_Airtime(Task):
             l.info("Updating recharge object status and hotsocket_ref")
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
                                                                  result)
-            return "Recharge for %s: Queued at Hotsocket #%s" % (cell_number,
-                                                                 hotsocket_ref)
+            return "Recharge for %s: Queued at Hotsocket "\
+                "#%s" % (recharge.msisdn, hotsocket_ref)
         elif status == 1:
             return "airtime request for %s already in process by another"\
-                " worker" % cell_number
+                " worker" % recharge.msisdn
         elif status == 2:
-            return "airtime request for %s is successful" % cell_number
+            return "airtime request for %s is successful" % recharge.msisdn
         elif status == 3:
-            return "airtime request for %s failed" % cell_number
+            return "airtime request for %s failed" % recharge.msisdn
         elif status == 4:
-            return "airtime request for %s is unrecoverable" % cell_number
+            return "airtime request for %s is unrecoverable" % recharge.msisdn
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
