@@ -100,8 +100,7 @@ class Hotsocket_Login(Task):
         login_result = request_hotsocket_login()
         status = login_result["response"]["status"]
         # Check the result
-        if status == \
-                settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
+        if status == settings.HOTSOCKET_CODES["LOGIN_SUCCESSFUL"]:
             l.info("Successful login to hotsocket")
             Account.objects.create(token=login_result["response"]["token"])
             return True
