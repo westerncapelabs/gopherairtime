@@ -11,9 +11,8 @@ from rest_framework.authtoken.models import Token
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
-                             prep_hotsocket_data, prep_login_data,
+                             prep_login_data,
                              request_hotsocket_login,
-                             request_hotsocket_recharge,
                              update_recharge_status_hotsocket_ref)
 
 
@@ -131,7 +130,7 @@ class TestRechargeFunctions(TaskTestCase):
         self.make_account()
         recharge_id = self.make_recharge()
         # Execute
-        hotsocket_data = prep_hotsocket_data(recharge_id)
+        hotsocket_data = hotsocket_get_airtime.prep_hotsocket_data(recharge_id)
         # Check
         self.assertEqual(hotsocket_data["recipient_msisdn"], "+27123")
         self.assertEqual(hotsocket_data["token"], '1234')
@@ -190,7 +189,7 @@ class TestRechargeFunctions(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
         # Execute
-        result = request_hotsocket_recharge(recharge_id)
+        result = hotsocket_get_airtime.request_hotsocket_recharge(recharge_id)
         # Check
         self.assertEqual(result["response"]["hotsocket_ref"], 4487)
         self.assertEqual(len(responses.calls), 1)

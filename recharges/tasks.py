@@ -45,36 +45,6 @@ def request_hotsocket_login():
     return login_post.json()
 
 
-def prep_hotsocket_data(recharge_id):
-    """
-    Constructs the dict needed to make a hotsocket airtime request
-    """
-    recharge = get_recharge(recharge_id)
-    hotsocket_data = {
-        'username': settings.HOTSOCKET_API_USERNAME,
-        'password': settings.HOTSOCKET_API_PASSWORD,
-        'as_json': True,
-        'token': get_token(),
-        'recipient_msisdn': recharge.msisdn,
-        # TODO: Issue-37 to dynamically set product code
-        'product_code': 'DATA',
-        # TODO: Issue-37 to dynamically set network code
-        'network_code': 'VOD',
-        'denomination': recharge.amount,
-        'reference': recharge.id + settings.HOTSOCKET_REFBASE
-    }
-    return hotsocket_data
-
-
-def request_hotsocket_recharge(recharge_id):
-    """
-    Makes hotsocket airtime request
-    """
-    hotsocket_data = prep_hotsocket_data(recharge_id)
-    recharge_post = requests.post("%s/recharge" %
-                                  settings.HOTSOCKET_API_ENDPOINT,
-                                  data=hotsocket_data)
-    return recharge_post.json()
 
 
 def update_recharge_status_hotsocket_ref(recharge, result):
@@ -141,6 +111,37 @@ class Hotsocket_Get_Airtime(Task):
     """
     name = "recharges.tasks.hotsocket_get_airtime"
 
+    def prep_hotsocket_data(self, recharge_id):
+
+        """
+        Constructs the dict needed to make a hotsocket airtime request
+        """
+        recharge = get_recharge(recharge_id)
+        hotsocket_data = {
+            'username': settings.HOTSOCKET_API_USERNAME,
+            'password': settings.HOTSOCKET_API_PASSWORD,
+            'as_json': True,
+            'token': get_token(),
+            'recipient_msisdn': recharge.msisdn,
+            # TODO: Issue-37 to dynamically set product code
+            'product_code': 'DATA',
+            # TODO: Issue-37 to dynamically set network code
+            'network_code': 'VOD',
+            'denomination': recharge.amount,
+            'reference': recharge.id + settings.HOTSOCKET_REFBASE
+        }
+        return hotsocket_data
+
+    def request_hotsocket_recharge(self, recharge_id):
+        """
+        Makes hotsocket airtime request
+        """
+        hotsocket_data = self.prep_hotsocket_data(recharge_id)
+        recharge_post = requests.post("%s/recharge" %
+                                      settings.HOTSOCKET_API_ENDPOINT,
+                                      data=hotsocket_data)
+        return recharge_post.json()
+
     def run(self, recharge_id, **kwargs):
         """
         Returns the recharge model entry
@@ -155,7 +156,7 @@ class Hotsocket_Get_Airtime(Task):
             recharge.save()
 
             l.info("Making hotsocket recharge request")
-            result = request_hotsocket_recharge(recharge_id)
+            result = self.request_hotsocket_recharge(recharge_id)
 
             l.info("Updating recharge object status and hotsocket_ref")
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
