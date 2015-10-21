@@ -11,6 +11,19 @@ class Recharge(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     msisdn = models.CharField(max_length=20)
+    network_choices = (
+        ('VOD', 'Vodacom'),
+        ('CELLC', 'CellC'),
+        ('MTN', 'MTN'),
+        ('TELKOM', 'Telkom Mobile'))
+    network_operator = models.CharField(network_codes=network_choices,
+                                        default=None)
+    product_choices = (
+        ('DATA', 'DATA Bundle'),
+        ('SMS', 'SMS Bundle'),
+        ('AIRTIME', 'AIRTIME Bundle'))
+    recharge_type = models.CharField(product_codes=product_choices,
+                                     default='AIRTIME')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
