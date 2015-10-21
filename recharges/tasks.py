@@ -120,10 +120,8 @@ class Hotsocket_Get_Airtime(Task):
             'as_json': True,
             'token': get_token(),
             'recipient_msisdn': recharge.msisdn,
-            # TODO: Issue-37 to dynamically set product code
-            'product_code': 'DATA',
-            # TODO: Issue-37 to dynamically set network code
-            'network_code': 'VOD',
+            'product_code': 'DATA',  # TODO 37: to dynamically set product code
+            'network_code': 'VOD',  # TODO 37: to dynamically set network code
             'denomination': recharge.amount,
             'reference': recharge.id + settings.HOTSOCKET_REFBASE
         }
