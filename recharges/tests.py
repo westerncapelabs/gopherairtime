@@ -11,15 +11,8 @@ from rest_framework.authtoken.models import Token
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
-<<<<<<< HEAD
-                             prep_hotsocket_data, prep_login_data,
-                             request_hotsocket_login,
-                             request_hotsocket_recharge,
                              update_recharge_status_hotsocket_ref,
                              hotsocket_status)
-=======
-                             update_recharge_status_hotsocket_ref)
->>>>>>> develop
 
 
 class APITestCase(TestCase):
