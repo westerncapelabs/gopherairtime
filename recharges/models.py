@@ -24,7 +24,7 @@ class Recharge(models.Model):
         ('TELKOM', 'Telkom Mobile'),
         ('CELLC', 'Cell C'))
     network_code = models.CharField(choices=network_choice,
-                                    default=None, max_length=20)
+                                    null=True, blank=True, max_length=20)
     product_choice = (
         ('AIRTIME', 'AIRTIME Bundle'),
         ('SMS', 'SMS Bundle'),
