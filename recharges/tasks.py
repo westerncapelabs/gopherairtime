@@ -157,8 +157,6 @@ class Hotsocket_Get_Airtime(Task):
                                                                  result)
             # Fire check_hotsocket_status task with a delay of 5 minutes
 
-            return "Recharge for %s: Queued at Hotsocket #%s" % (recharge.msisdn,
-                                                                 hotsocket_ref)
             return "Recharge for %s: Queued at Hotsocket "\
                 "#%s" % (recharge.msisdn, hotsocket_ref)
         elif status == 1:
