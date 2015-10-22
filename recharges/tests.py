@@ -11,11 +11,15 @@ from rest_framework.authtoken.models import Token
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
+<<<<<<< HEAD
                              prep_hotsocket_data, prep_login_data,
                              request_hotsocket_login,
                              request_hotsocket_recharge,
                              update_recharge_status_hotsocket_ref,
                              hotsocket_status)
+=======
+                             update_recharge_status_hotsocket_ref)
+>>>>>>> develop
 
 
 class APITestCase(TestCase):
@@ -132,18 +136,19 @@ class TestRechargeFunctions(TaskTestCase):
         self.make_account()
         recharge_id = self.make_recharge()
         # Execute
-        hotsocket_data = prep_hotsocket_data(recharge_id)
+        hotsocket_data = hotsocket_get_airtime.prep_hotsocket_data(recharge_id)
         # Check
         self.assertEqual(hotsocket_data["recipient_msisdn"], "+27123")
         self.assertEqual(hotsocket_data["token"], '1234')
+        self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
 
     def test_prep_login_data(self):
         # Setup
         # Execute
-        login_data = prep_login_data()
+        login_data = hotsocket_login.prep_login_data()
         # Check
-        self.assertEqual(login_data["password"], "REPLACEME")
-        self.assertEqual(login_data["username"], "REPLACEME")
+        self.assertEqual(login_data["password"], "Replaceme_password")
+        self.assertEqual(login_data["username"], "Replaceme_username")
 
     @responses.activate
     def test_request_hotsocket_login(self):
@@ -161,7 +166,7 @@ class TestRechargeFunctions(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
         # Execute
-        login_result = request_hotsocket_login()
+        login_result = hotsocket_login.request_hotsocket_login()
         # Check
         self.assertEqual(login_result["response"]["status"], "0000")
         self.assertEqual(login_result["response"]["message"],
@@ -178,7 +183,7 @@ class TestRechargeFunctions(TaskTestCase):
         expected_response_good = {
             "response": {
                 "hotsocket_ref": 4487,
-                "serveport": 4487,
+                "serveport_ref": 4487,
                 "message": "Successfully submitted recharge",
                 "status": "0000",
                 "token": "myprocessqueue"
@@ -190,7 +195,7 @@ class TestRechargeFunctions(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
         # Execute
-        result = request_hotsocket_recharge(recharge_id)
+        result = hotsocket_get_airtime.request_hotsocket_recharge(recharge_id)
         # Check
         self.assertEqual(result["response"]["hotsocket_ref"], 4487)
         self.assertEqual(len(responses.calls), 1)
@@ -211,7 +216,6 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(hotsocket_ref, 555)
         recharge = Recharge.objects.get(id=recharge_id)
-        self.assertEqual(recharge.status, 1)
         self.assertEqual(recharge.hotsocket_ref, 555)
 
 
@@ -278,7 +282,7 @@ class TestRechargeTasks(TaskTestCase):
         expected_response_good = {
             "response": {
                 "hotsocket_ref": 4487,
-                "serveport": 4487,
+                "serveport_ref": 4487,
                 "message": "Successfully submitted recharge",
                 "status": "0000",
                 "token": "myprocessqueue"
@@ -313,7 +317,7 @@ class TestRechargeTasks(TaskTestCase):
         expected_response_good = {
             "response": {
                 "hotsocket_ref": 4487,
-                "serveport": 4487,
+                "serveport_ref": 4487,
                 "message": "Successfully submitted recharge",
                 "status": "0000",
                 "token": "myprocessqueue"
@@ -348,7 +352,8 @@ class TestRechargeTasks(TaskTestCase):
         result = hotsocket_get_airtime.delay(recharge_id)
         # Check
         self.assertEqual(result.get(),
-                         "airtime request for +277244555 in process")
+                         "airtime request for +277244555 already in process"
+                         " by another worker")
 
     def test_hotsocket_get_airtime_successful(self):
         # Setup
