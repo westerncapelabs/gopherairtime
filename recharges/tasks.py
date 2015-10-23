@@ -133,6 +133,7 @@ class Hotsocket_Get_Airtime(Task):
         cellc = ['+2784', '+2774']
         telkom = ['+2781']
         vodacom = ['+2782', '+2772', '+2776']
+        msisdn = self.normalize_msisdn(msisdn)
         msisdn_sliced = msisdn[0:5]
 
         print(msisdn_sliced)
