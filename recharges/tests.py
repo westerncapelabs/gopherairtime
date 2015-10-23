@@ -26,7 +26,7 @@ class TaskTestCase(TestCase):
         account = Account.objects.create(token=token)
         return account.id
 
-    def make_recharge(self, amount=100.00, msisdn="+27123", status=0):
+    def make_recharge(self, amount=100.00, msisdn="+2782003453", status=0):
         airtime = Recharge.objects.create(
             amount=amount, msisdn=msisdn, status=status, network_code='VOD')
         return airtime.id
@@ -119,7 +119,7 @@ class TestRechargeFunctions(TaskTestCase):
         recharge = get_recharge(recharge_id)
         # Check
         self.assertEqual(recharge.amount, 100)
-        self.assertEqual(recharge.msisdn, '+27123')
+        self.assertEqual(recharge.msisdn, '+2782003453')
         self.assertEqual(recharge.status, 0)
         self.assertEqual(recharge.hotsocket_ref, 0)
         self.assertEqual(recharge.network_code, 'VOD')
@@ -131,7 +131,7 @@ class TestRechargeFunctions(TaskTestCase):
         # Execute
         hotsocket_data = hotsocket_get_airtime.prep_hotsocket_data(recharge_id)
         # Check
-        self.assertEqual(hotsocket_data["recipient_msisdn"], "+27123")
+        self.assertEqual(hotsocket_data["recipient_msisdn"], "+2782003453")
         self.assertEqual(hotsocket_data["token"], '1234')
         self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
 
@@ -212,25 +212,25 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(recharge.hotsocket_ref, 555)
 
     def test_normalize_msisdn(self):
-        msisdn = '0845091190'
+        msisdn = '0845768678'
         country_code = '27'
         result = hotsocket_get_airtime.normalize_msisdn(msisdn, country_code)
-        self.assertEqual(result, '+27845091190')
+        self.assertEqual(result, '+27845768678')
 
-        msisdn_with_zeros = '0027845091190'
+        msisdn_with_zeros = '00845768678'
         result = hotsocket_get_airtime.normalize_msisdn(msisdn_with_zeros,
                                                         country_code)
-        self.assertEqual(result, '+27845091190')
+        self.assertEqual(result, '+27845768678')
 
-        msisdn_with_plus = '0027845091190'
+        msisdn_with_plus = '+27845768678'
         result = hotsocket_get_airtime.normalize_msisdn(msisdn_with_plus,
                                                         country_code)
-        self.assertEqual(result, '+27845091190')
+        self.assertEqual(result, '+27845768678')
 
-        msisdn_country_code = '0027845091190'
+        msisdn_country_code = '27845768678'
         result = hotsocket_get_airtime.normalize_msisdn(msisdn_country_code,
                                                         country_code)
-        self.assertEqual(result, '+27845091190')
+        self.assertEqual(result, '+27845768678')
 
     def test_look_up_mobile_operator(self):
         msisdn_cellc = '+27840000001'

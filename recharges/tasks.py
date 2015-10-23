@@ -109,22 +109,17 @@ class Hotsocket_Get_Airtime(Task):
     name = "recharges.tasks.hotsocket_get_airtime"
 
     def normalize_msisdn(self, msisdn, country_code=''):
-        # Thanks to praekelt/vumi for this one
-        # don't touch shortcodes
+
         if len(msisdn) <= 5:
             return msisdn
         msisdn = ''.join([c for c in msisdn if c.isdigit() or c == '+'])
         if msisdn.startswith('00'):
-            print('+' + msisdn[2:])
-            return '+' + msisdn[2:]
+            return '+' + country_code + msisdn[2:]
         if msisdn.startswith('0'):
-            print('+' + country_code + msisdn[1:])
             return '+' + country_code + msisdn[1:]
         if msisdn.startswith('+'):
-            print(msisdn)
             return msisdn
         if msisdn.startswith(country_code):
-            print('+' + msisdn)
             return '+' + msisdn
         return msisdn
 
