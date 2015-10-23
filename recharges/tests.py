@@ -212,21 +212,25 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(recharge.hotsocket_ref, 555)
 
     def test_look_up_mobile_operator(self):
-        msisdn_cellc = "+27840000001"
+        msisdn_cellc = '+27840000001'
         cellc = hotsocket_get_airtime.look_up_mobile_operator(msisdn_cellc)
         self.assertEqual(cellc, "CELLC")
 
-        msisdn_mtn = "+27780000001"
+        msisdn_mtn = '+27830000001'
         mtn = hotsocket_get_airtime.look_up_mobile_operator(msisdn_mtn)
         self.assertEqual(mtn, "MTN")
 
-        msisdn_telkom = "+27810000001"
+        msisdn_telkom = '+27810000001'
         telkom = hotsocket_get_airtime.look_up_mobile_operator(msisdn_telkom)
         self.assertEqual(telkom, "TELKOM")
 
-        msisdn_vodacom = "+27760000001"
+        msisdn_vodacom = '+27760000001'
         vodacom = hotsocket_get_airtime.look_up_mobile_operator(msisdn_vodacom)
         self.assertEqual(vodacom, "VOD")
+
+        msisdn_unknown = '+272134567890'
+        unknown = hotsocket_get_airtime.look_up_mobile_operator(msisdn_unknown)
+        self.assertEqual(unknown, False)
 
 
 class TestRechargeTasks(TaskTestCase):
