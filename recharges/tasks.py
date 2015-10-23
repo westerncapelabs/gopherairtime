@@ -108,6 +108,26 @@ class Hotsocket_Get_Airtime(Task):
     """
     name = "recharges.tasks.hotsocket_get_airtime"
 
+    def look_up_mobile_operator(self, msisdn):
+        mtn = ['+2783', '+2773']
+        cellc = ['+2784', '+2774']
+        telkom = ['+2781']
+        vodacom = ['+2782', '+2772', '+2776']
+        msisdn_sliced = msisdn[0:5]
+
+        print(msisdn_sliced)
+
+        if msisdn_sliced in mtn:
+            return "MTN"
+        elif msisdn_sliced in cellc:
+            return "CELLC"
+        elif msisdn_sliced in telkom:
+            return "TELKOM"
+        elif msisdn_sliced in vodacom:
+            return "VOD"
+        else:
+            return False
+
     def prep_hotsocket_data(self, recharge_id):
 
         """
@@ -166,22 +186,5 @@ class Hotsocket_Get_Airtime(Task):
             return "airtime request for %s failed" % recharge.msisdn
         elif status == 4:
             return "airtime request for %s is unrecoverable" % recharge.msisdn
-
-    def look_up_mobile_operator(self, msisdn):
-        mtn = [2783, 2773]
-        cellc = [2784, 2774]
-        telkom = [2781]
-        vodacom = [2782, 2772, 2776]
-        print(msisdn)
-        if msisdn in mtn:
-            return "MTN"
-        elif msisdn in cellc:
-            return "CELLC"
-        elif msisdn in telkom:
-            return "TELKOM"
-        elif msisdn in vodacom:
-            return "VOD"
-        else:
-            return False
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
