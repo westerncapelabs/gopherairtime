@@ -108,8 +108,9 @@ class Hotsocket_Get_Airtime(Task):
     """
     name = "recharges.tasks.hotsocket_get_airtime"
 
-    def normalize_msisdn(self, msisdn, country_code=''):
-
+    def normalize_msisdn(self, recharge_id, country_code='',):
+        recharge = get_recharge(recharge_id)
+        msisdn = recharge.msisdn
         if len(msisdn) <= 5:
             return msisdn
         msisdn = ''.join([c for c in msisdn if c.isdigit() or c == '+'])
@@ -128,10 +129,7 @@ class Hotsocket_Get_Airtime(Task):
         cellc = ['+2784', '+2774']
         telkom = ['+2781']
         vodacom = ['+2782', '+2772', '+2776']
-        msisdn = self.normalize_msisdn(msisdn)
         msisdn_sliced = msisdn[0:5]
-
-        print(msisdn_sliced)
 
         if msisdn_sliced in mtn:
             return "MTN"
@@ -157,16 +155,18 @@ class Hotsocket_Get_Airtime(Task):
             'token': get_token(),
             'recipient_msisdn': recharge.msisdn,
             'product_code': 'DATA',  # TODO 37: to dynamically set product code
-            'network_code': 'VOD',  # TODO 37: to dynamically set network code
+            'network_code': recharge.network_code,
             'denomination': recharge.amount,
-            'reference': recharge.id + settings.HOTSOCKET_REFBASE
+            'reference': recharge_id + settings.HOTSOCKET_REFBASE
         }
+
         return hotsocket_data
 
     def request_hotsocket_recharge(self, recharge_id):
         """
         Makes hotsocket airtime request
         """
+
         hotsocket_data = self.prep_hotsocket_data(recharge_id)
         recharge_post = requests.post("%s/recharge" %
                                       settings.HOTSOCKET_API_ENDPOINT,
@@ -180,15 +180,14 @@ class Hotsocket_Get_Airtime(Task):
         l = self.get_logger(**kwargs)
         recharge = get_recharge(recharge_id)
         status = recharge.status
-
         if status == 0:
             recharge.status = 1
             recharge.save()
 
             l.info("Making hotsocket recharge request")
             result = self.request_hotsocket_recharge(recharge_id)
-
             l.info("Updating recharge object status and hotsocket_ref")
+
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
                                                                  result)
             return "Recharge for %s: Queued at Hotsocket "\
@@ -202,5 +201,6 @@ class Hotsocket_Get_Airtime(Task):
             return "airtime request for %s failed" % recharge.msisdn
         elif status == 4:
             return "airtime request for %s is unrecoverable" % recharge.msisdn
+
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
