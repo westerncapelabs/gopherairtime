@@ -108,9 +108,7 @@ class Hotsocket_Get_Airtime(Task):
     """
     name = "recharges.tasks.hotsocket_get_airtime"
 
-    def normalize_msisdn(self, recharge_id, country_code='',):
-        recharge = get_recharge(recharge_id)
-        msisdn = recharge.msisdn
+    def normalize_msisdn(self, msisdn, country_code='',):
         if len(msisdn) <= 5:
             return msisdn
         msisdn = ''.join([c for c in msisdn if c.isdigit() or c == '+'])
@@ -182,6 +180,9 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
         if status == 0:
             recharge.status = 1
+            recharge.save()
+
+            recharge.msisdn = self.normalize_msisdn(recharge.msisdn)
             recharge.save()
 
             l.info("Making hotsocket recharge request")

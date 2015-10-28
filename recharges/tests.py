@@ -212,51 +212,38 @@ class TestRechargeFunctions(TaskTestCase):
 
     def test_normalize_msisdn(self):
         # Setup
-        self.make_account()
-
-        msisdn = self.make_recharge(msisdn="+2772")
         # Execute
-        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+        result = hotsocket_get_airtime.normalize_msisdn("+2772",
                                                         country_code='27')
         # Check
         self.assertEqual(result, "+2772")
 
-        # Setup
-        msisdn = self.make_recharge(msisdn="00724455545")
         # Execute
-        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+        result = hotsocket_get_airtime.normalize_msisdn("00724455545",
                                                         country_code='27')
         # Check
         self.assertEqual(result, "+27724455545")
 
-        # Setup
-        msisdn = self.make_recharge(msisdn="0724455545")
         # Execute
-        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+        result = hotsocket_get_airtime.normalize_msisdn("0724455545",
                                                         country_code='27')
         # Check
         self.assertEqual(result, "+27724455545")
 
-        # Setup
-        msisdn = self.make_recharge(msisdn="+27724455545")
         # Execute
-        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+        result = hotsocket_get_airtime.normalize_msisdn("27724455545",
                                                         country_code='27')
         # Check
         self.assertEqual(result, "+27724455545")
 
-        # Setup
-        msisdn = self.make_recharge(msisdn="27724455545")
         # Execute
-        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+        result = hotsocket_get_airtime.normalize_msisdn("27724455545",
                                                         country_code='27')
         # Check
         self.assertEqual(result, "+27724455545")
 
-        # Setup
-        msisdn = self.make_recharge(msisdn="AAAA0072 4455 545")
         # Execute
-        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+        result = hotsocket_get_airtime.normalize_msisdn("AAAA0072 4455 545",
                                                         country_code='27')
         # Check
         self.assertEqual(result, "+27724455545")
@@ -393,7 +380,7 @@ class TestRechargeTasks(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
 
-        recharge_id = self.make_recharge(msisdn="+277244555", status=0)
+        recharge_id = self.make_recharge(msisdn="+27 7244555", status=0)
         # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
         # Check
@@ -406,6 +393,7 @@ class TestRechargeTasks(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
+        self.assertEqual(recharge.msisdn, '+277244555')
 
     def test_hotsocket_get_airtime_in_process(self):
         # Setup
