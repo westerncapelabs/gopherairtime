@@ -185,10 +185,14 @@ class Hotsocket_Get_Airtime(Task):
             recharge.msisdn = self.normalize_msisdn(recharge.msisdn)
             recharge.save()
 
+            recharge.network_code = self.look_up_mobile_operator(recharge.
+                                                                 msisdn)
+            recharge.save()
+
             l.info("Making hotsocket recharge request")
             result = self.request_hotsocket_recharge(recharge_id)
-            l.info("Updating recharge object status and hotsocket_ref")
 
+            l.info("Updating recharge object status and hotsocket_ref")
             hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
                                                                  result)
             return "Recharge for %s: Queued at Hotsocket "\
