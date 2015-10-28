@@ -253,6 +253,14 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(result, "+27724455545")
 
+        # Setup
+        msisdn = self.make_recharge(msisdn="AAAA0072 4455 545")
+        # Execute
+        result = hotsocket_get_airtime.normalize_msisdn(msisdn,
+                                                        country_code='27')
+        # Check
+        self.assertEqual(result, "+27724455545")
+
     def test_look_up_mobile_operator(self):
         msisdn_cellc = '+27840000001'
         cellc = hotsocket_get_airtime.look_up_mobile_operator(msisdn_cellc)
