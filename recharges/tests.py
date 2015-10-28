@@ -394,6 +394,7 @@ class TestRechargeTasks(TaskTestCase):
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
         self.assertEqual(recharge.msisdn, '+277244555')
+        self.assertEqual(recharge.network_code, 'VOD')
 
     def test_hotsocket_get_airtime_in_process(self):
         # Setup
