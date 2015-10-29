@@ -383,12 +383,12 @@ class TestRechargeTasks(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
 
-        recharge_id = self.make_recharge(msisdn="+27 7244555", status=0)
+        recharge_id = self.make_recharge(msisdn="+27 72445557", status=0)
         # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
         # Check
         self.assertEqual(result.get(),
-                         "Recharge for +277244555: Queued at Hotsocket #4487")
+                         "Recharge for +2772445557: Queued at Hotsocket #4487")
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 1)
         self.assertEqual(recharge.hotsocket_ref, 4487)
@@ -396,7 +396,7 @@ class TestRechargeTasks(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
-        self.assertEqual(recharge.msisdn, '+277244555')
+        self.assertEqual(recharge.msisdn, '+2772445557')
         self.assertEqual(recharge.network_code, 'VOD')
 
     def test_hotsocket_get_airtime_in_process(self):

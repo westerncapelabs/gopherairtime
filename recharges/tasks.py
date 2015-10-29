@@ -63,7 +63,6 @@ def look_up_mobile_operator(msisdn):
     cellc = ['+2784', '+2774']
     telkom = ['+2781']
     vodacom = ['+2782', '+2772', '+2776']
-    print(msisdn)
     msisdn_sliced = msisdn[0:5]
 
     if msisdn_sliced in mtn:
