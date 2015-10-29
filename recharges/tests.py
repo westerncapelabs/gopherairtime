@@ -127,12 +127,20 @@ class TestRechargeFunctions(TaskTestCase):
         # Setup
         self.make_account()
         recharge_id = self.make_recharge()
+        recharge = Recharge.objects.get(id=recharge_id)
+        recharge.network_code = "VOD"
+        recharge.save()
         # Execute
         hotsocket_data = hotsocket_get_airtime.prep_hotsocket_data(recharge_id)
         # Check
         self.assertEqual(hotsocket_data["recipient_msisdn"], "+2782003453")
         self.assertEqual(hotsocket_data["token"], '1234')
+        self.assertEqual(hotsocket_data["product_code"], 'AIRTIME')
+        self.assertEqual(hotsocket_data["network_code"], 'VOD')
+
         self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
+
+        # check product_code and network
 
     def test_prep_login_data(self):
         # Setup
