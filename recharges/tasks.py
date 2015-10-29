@@ -152,12 +152,11 @@ class Hotsocket_Get_Airtime(Task):
             'as_json': True,
             'token': get_token(),
             'recipient_msisdn': recharge.msisdn,
-            'product_code': 'DATA',  # TODO 37: to dynamically set product code
+            'product_code': recharge.product_code,
             'network_code': recharge.network_code,
             'denomination': recharge.amount,
-            'reference': recharge_id + settings.HOTSOCKET_REFBASE
+            'reerence': recharge_id + settings.HOTSOCKET_REFBASE
         }
-
         return hotsocket_data
 
     def request_hotsocket_recharge(self, recharge_id):
