@@ -213,11 +213,24 @@ hotsocket_get_airtime = Hotsocket_Get_Airtime()
 
 
 class Check_Hotsocket_Status(Task):
+
     """
     Task to check hotsocket recharge request and sets the recharge model
     status to successful if the airtime has been loaded to the user's phone.
     """
     name = "recharges.tasks.Check_Hotsocket_Status"
+
+    def prep_hotsocket_status_dict(self, recharge_id, hs_reference):
+
+        hotsocket_data = {
+            'username': settings.HOTSOCKET_API_USERNAME,
+            'as_json': True,
+            'token': get_token(),
+            'reference': recharge_id + settings.HOTSOCKET_REFBASE,
+            'hotsocket_ref': hs_reference
+        }
+
+        return hotsocket_data
 
     def run(self, recharge_id, **kwargs):
         # Call get_recharge() by recharge_id to get recharge object
