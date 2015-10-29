@@ -35,6 +35,54 @@ def update_recharge_status_hotsocket_ref(recharge, result):
     return hotsocket_ref
 
 
+def normalize_msisdn(msisdn, country_code='',):
+    """
+    Gets msisdn and cleans it to the correct format when returned
+    """
+    if len(msisdn) <= 5:
+        return msisdn
+    msisdn = ''.join([c for c in msisdn if c.isdigit() or c == '+'])
+    if msisdn.startswith('00'):
+        return '+' + country_code + msisdn[2:]
+    if msisdn.startswith('0'):
+        return '+' + country_code + msisdn[1:]
+    if msisdn.startswith('+'):
+        return msisdn
+    if msisdn.startswith(country_code):
+        return '+' + msisdn
+    return msisdn
+
+
+def look_up_mobile_operator(msisdn):
+    """
+    Gets msisdn, slice it to four or three characters and compare mobile
+    operator prefix with the sliced msisdn then returns the correct
+    network_code else false
+    """
+    mtn = ['+27603', '+27604', '+27605', '+27710', '+27717', '+27718',
+           '+27719', '+27810', '+2783', '+2773', '+2778']
+
+    cellc = ['+2784', '+2774', '+27610', '+27611', '+27612', '+27613']
+
+    telkom = ['+27811', '+27812', '+27812', '+27813', '+27814',
+              '+27815', '+27817']
+
+    vodacom = ['+27711', '+27712', '+27713', '+27714', '+27715', '+27716',
+               '+2772', '+2776', '+2779', '+2782', '+27818', '+27606',
+               '+27607', '+2768', '+27609']
+
+    if msisdn[0:5] in mtn or msisdn[0:6] in mtn:
+        return "MTN"
+    elif msisdn[0:5] in cellc or msisdn[0:6] in cellc:
+        return "CELLC"
+    elif msisdn[0:5] in telkom or msisdn[0:6] in telkom:
+        return "TELKOM"
+    elif msisdn[0:5] in vodacom or msisdn[0:6] in vodacom:
+        return "VOD"
+    else:
+        return False
+
+
 class Hotsocket_Login(Task):
 
     """
@@ -108,38 +156,6 @@ class Hotsocket_Get_Airtime(Task):
     """
     name = "recharges.tasks.hotsocket_get_airtime"
 
-    def normalize_msisdn(self, msisdn, country_code='',):
-        if len(msisdn) <= 5:
-            return msisdn
-        msisdn = ''.join([c for c in msisdn if c.isdigit() or c == '+'])
-        if msisdn.startswith('00'):
-            return '+' + country_code + msisdn[2:]
-        if msisdn.startswith('0'):
-            return '+' + country_code + msisdn[1:]
-        if msisdn.startswith('+'):
-            return msisdn
-        if msisdn.startswith(country_code):
-            return '+' + msisdn
-        return msisdn
-
-    def look_up_mobile_operator(self, msisdn):
-        mtn = ['+2783', '+2773']
-        cellc = ['+2784', '+2774']
-        telkom = ['+2781']
-        vodacom = ['+2782', '+2772', '+2776']
-        msisdn_sliced = msisdn[0:5]
-
-        if msisdn_sliced in mtn:
-            return "MTN"
-        elif msisdn_sliced in cellc:
-            return "CELLC"
-        elif msisdn_sliced in telkom:
-            return "TELKOM"
-        elif msisdn_sliced in vodacom:
-            return "VOD"
-        else:
-            return False
-
     def prep_hotsocket_data(self, recharge_id):
 
         """
@@ -181,11 +197,11 @@ class Hotsocket_Get_Airtime(Task):
             recharge.status = 1
             recharge.save()
 
-            recharge.msisdn = self.normalize_msisdn(recharge.msisdn)
+            recharge.msisdn = normalize_msisdn(recharge.msisdn)
             recharge.save()
 
-            recharge.network_code = self.look_up_mobile_operator(recharge.
-                                                                 msisdn)
+            recharge.network_code = look_up_mobile_operator(recharge.
+                                                            msisdn)
             recharge.save()
 
             l.info("Making hotsocket recharge request")
