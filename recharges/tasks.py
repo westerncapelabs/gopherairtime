@@ -59,19 +59,27 @@ def look_up_mobile_operator(msisdn):
     operator prefix with the sliced msisdn then returns the correct
     network_code else false
     """
-    mtn = ['+2783', '+2773']
-    cellc = ['+2784', '+2774']
-    telkom = ['+2781']
-    vodacom = ['+2782', '+2772', '+2776']
+    mtn = ['+27603', '+27604', '+27605', '+27710', '+27717', '+27718',
+           '+27719', '+27810', '+2783', '+2773', '+2778']
+
+    cellc = ['+2784', '+2774', '+27610', '+27611', '+27612', '+27613']
+
+    telkom = ['+27811', '+27812', '+27812', '+27813', '+27814',
+              '+27815', '+27817']
+
+    vodacom = ['+27711', '+27712', '+27713', '+27714', '+27715', '+27716',
+               '+2772', '+2776', '+2779', '+2782', '+27818', '+27606',
+               '+27607', '+2768', '+27609']
+
     msisdn_sliced = msisdn[0:5]
 
-    if msisdn_sliced in mtn:
+    if msisdn_sliced in mtn or msisdn[0:6] in mtn:
         return "MTN"
-    elif msisdn_sliced in cellc:
+    elif msisdn_sliced in cellc or msisdn[0:6] in cellc:
         return "CELLC"
-    elif msisdn_sliced in telkom:
+    elif msisdn_sliced in telkom or msisdn[0:6] in telkom:
         return "TELKOM"
-    elif msisdn_sliced in vodacom:
+    elif msisdn_sliced in vodacom or msisdn[0:6] in vodacom:
         return "VOD"
     else:
         return False
