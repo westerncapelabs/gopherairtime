@@ -450,3 +450,12 @@ class TestRechargeTasks(TaskTestCase):
         recharge_id = self.make_recharge()
         result = hotsocket_status(recharge_id)
         self.assertEqual(result, "recharge is succesful")
+
+
+class TestRechrgeStatus(TaskTestCase):
+    def test_prep_hotsocket_status_dict(self):
+        self.make_account()
+        result = hotsocket_status.prep_hotsocket_status_dict(recharge_id=1003,
+                                                             hs_reference=4507)
+        self.assertEqual(result['reference'], 11003)
+        self.assertEqual(result['hotsocket_ref'], 4507)
