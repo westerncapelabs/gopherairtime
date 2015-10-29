@@ -71,15 +71,13 @@ def look_up_mobile_operator(msisdn):
                '+2772', '+2776', '+2779', '+2782', '+27818', '+27606',
                '+27607', '+2768', '+27609']
 
-    msisdn_sliced = msisdn[0:5]
-
-    if msisdn_sliced in mtn or msisdn[0:6] in mtn:
+    if msisdn[0:5] in mtn or msisdn[0:6] in mtn:
         return "MTN"
-    elif msisdn_sliced in cellc or msisdn[0:6] in cellc:
+    elif msisdn[0:5] in cellc or msisdn[0:6] in cellc:
         return "CELLC"
-    elif msisdn_sliced in telkom or msisdn[0:6] in telkom:
+    elif msisdn[0:5] in telkom or msisdn[0:6] in telkom:
         return "TELKOM"
-    elif msisdn_sliced in vodacom or msisdn[0:6] in vodacom:
+    elif msisdn[0:5] in vodacom or msisdn[0:6] in vodacom:
         return "VOD"
     else:
         return False
