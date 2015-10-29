@@ -180,9 +180,12 @@ class Check_Hotsocket_Status(Task):
     name = "recharges.tasks.Check_Hotsocket_Status"
 
     def run(self, recharge_id, **kwargs):
-        # Loop through hotsocket_get_airtime task and get current status
-        # Return "recharge is succesful" if the recharge request went through
-        # Else return  any current status
+        # Call get_recharge() by recharge_id to get recharge object
+        # Call get_hotsocket_status()
+        # by supplying hotsocket reference and and ref_id to get status code
+        # Check if hotsocket status code is 000
+        # Recharge status code should be 2 and such status should be saved
+        # Return "Recharge for " + recharge.msisdn + " is successful"
         return "recharge is succesful"
 
 hotsocket_status = Check_Hotsocket_Status()
