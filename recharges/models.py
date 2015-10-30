@@ -18,6 +18,19 @@ class Recharge(models.Model):
         (3, 'Failed'),
         (4, 'Unrecoverable'))
     status = models.IntegerField(choices=status_choices, default=0)
+    network_choice = (
+        ('VOD', 'Vodacom'),
+        ('MTN', 'MTN'),
+        ('TELKOM', 'Telkom Mobile'),
+        ('CELLC', 'Cell C'))
+    network_code = models.CharField(choices=network_choice,
+                                    null=True, blank=True, max_length=20)
+    product_choice = (
+        ('AIRTIME', 'AIRTIME Bundle'),
+        ('SMS', 'SMS Bundle'),
+        ('DATA', 'DATA Bundle'))
+    product_code = models.CharField(choices=product_choice,
+                                    default='AIRTIME', max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
