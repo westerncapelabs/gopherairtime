@@ -506,7 +506,34 @@ class TestRechargeTasks(TaskTestCase):
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is unrecoverable")
 
+    @responses.activate
     def test_check_hotsocket_status(self):
+        # Setup
+        self.make_account()
         recharge_id = self.make_recharge()
-        result = check_hotsocket_status(recharge_id)
-        self.assertEqual(result, "recharge is successful")
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Status lookup successful.",
+                "recharge_status": "Successful",
+                "running_balance": 0,
+                "recharge_status_cd": 3,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute
+        result = check_hotsocket_status.delay(recharge_id)
+
+        # Check
+        self.assertEqual(result.get(),
+                         "Recharge for +27820003453 successful")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 2)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")

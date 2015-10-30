@@ -264,8 +264,6 @@ class Check_Hotsocket_Status(Task):
         return hotsocket_data
 
     def request_hotsocket_status(self, recharge_id):
-        # recharge = get_recharge(recharge_id)
-
         hotsocket_data = self.prep_hotsocket_status_dict(recharge_id)
         recharge_status_post = requests.post("%s/status" %
                                              settings.HOTSOCKET_API_ENDPOINT,
@@ -273,12 +271,48 @@ class Check_Hotsocket_Status(Task):
         return recharge_status_post.json()
 
     def run(self, recharge_id, **kwargs):
-        # Call get_recharge() by recharge_id to get recharge object
-        # Call get_hotsocket_status()
-        # by supplying hotsocket reference and and ref_id to get status code
-        # Check if hotsocket status code is 000
-        # Recharge status code should be 2 and such status should be saved
-        # Return "Recharge for " + recharge.msisdn + " is successful"
+        l = self.get_logger(**kwargs)
+        l.info("Looking up Hotsocket status")
+        hs_status = self.request_hotsocket_status(recharge_id)
+        hs_status_code = hs_status["response"]["status"]
+
+        if hs_status_code == "0000":
+            # recharge successful
+            recharge = get_recharge(recharge_id)
+            recharge.status = 2
+            recharge.save()
+            return "Recharge for %s successful" % recharge.msisdn
+        elif hs_status_code == 887:
+            # invalid token
+            pass
+        elif hs_status_code == 889:
+            # expired token
+            pass
+        elif hs_status_code == 5000:
+            # system error
+            pass
+        elif hs_status_code == 6011:
+            # invalid product
+            pass
+        elif hs_status_code == 6012:
+            # invalid network code
+            pass
+        elif hs_status_code == 6013:
+            # non-numeric msisdn
+            pass
+        elif hs_status_code == 6014:
+            # malformed msisdn
+            pass
+        elif hs_status_code == 6016:
+            # duplicate reference
+            pass
+        elif hs_status_code == 6017:
+            # non-numeric reference
+            pass
+        elif hs_status_code == 6020:
+            # invalid network + product + denomination combination
+            pass
+
         return "recharge is successful"
 
 check_hotsocket_status = Check_Hotsocket_Status()
