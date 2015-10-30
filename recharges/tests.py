@@ -293,10 +293,9 @@ class TestRechargeFunctions(TaskTestCase):
         self.make_account()
 
         result = check_hotsocket_status.\
-            prep_hotsocket_status_dict(recharge_id=1003, hs_reference=4507)
+            prep_hotsocket_status_dict(recharge_id=1003)
 
         self.assertEqual(result['reference'], 11003)
-        self.assertEqual(result['hotsocket_ref'], 4507)
         self.assertEqual(result['token'], '1234')
         self.assertEqual(result['username'], 'Replaceme_username')
 

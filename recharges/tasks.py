@@ -236,14 +236,13 @@ class Check_Hotsocket_Status(Task):
     """
     name = "recharges.tasks.Check_Hotsocket_Status"
 
-    def prep_hotsocket_status_dict(self, recharge_id, hs_reference):
+    def prep_hotsocket_status_dict(self, recharge_id):
 
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
             'token': get_token(),
             'reference': recharge_id + settings.HOTSOCKET_REFBASE,
-            'hotsocket_ref': hs_reference
         }
 
         return hotsocket_data
