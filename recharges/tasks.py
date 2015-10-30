@@ -210,8 +210,6 @@ class Hotsocket_Get_Airtime(Task):
             recharge.save()
 
             recharge.msisdn = normalize_msisdn(recharge.msisdn)
-            recharge.save()
-
             recharge.network_code = look_up_mobile_operator(recharge.msisdn)
             recharge.save()
 
