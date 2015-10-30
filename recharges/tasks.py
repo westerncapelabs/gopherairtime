@@ -35,7 +35,7 @@ def update_recharge_status_hotsocket_ref(recharge, result):
     return hotsocket_ref
 
 
-def normalize_msisdn(msisdn, country_code='',):
+def normalize_msisdn(msisdn, country_code='27'):
     """
     Gets msisdn and cleans it to the correct format when returned
     """
@@ -207,22 +207,27 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
         if status == 0:
             recharge.status = 1
+            recharge.msisdn = normalize_msisdn(recharge.msisdn, '27')
             recharge.save()
+            mno = look_up_mobile_operator(recharge.msisdn)
+            if mno:
+                recharge.network_code = mno
+                recharge.save()
 
-            recharge.msisdn = normalize_msisdn(recharge.msisdn)
-            recharge.save()
+                l.info("Making hotsocket recharge request")
+                result = self.request_hotsocket_recharge(recharge_id)
 
-            recharge.network_code = look_up_mobile_operator(recharge.msisdn)
-            recharge.save()
-
-            l.info("Making hotsocket recharge request")
-            result = self.request_hotsocket_recharge(recharge_id)
-
-            l.info("Updating recharge object status and hotsocket_ref")
-            hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
-                                                                 result)
-            return "Recharge for %s: Queued at Hotsocket "\
-                "#%s" % (recharge.msisdn, hotsocket_ref)
+                l.info("Updating recharge object status and hotsocket_ref")
+                hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
+                                                                     result)
+                return "Recharge for %s: Queued at Hotsocket "\
+                    "#%s" % (recharge.msisdn, hotsocket_ref)
+            else:
+                l.info("Mark recharge has unrecoverable")
+                recharge.status = 4
+                recharge.save()
+                return "Mobile network operator could not be determined for "\
+                    "%s" % recharge.msisdn
         elif status == 1:
             return "airtime request for %s already in process by another"\
                 " worker" % recharge.msisdn
