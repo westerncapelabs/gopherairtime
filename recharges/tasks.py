@@ -29,8 +29,11 @@ def update_recharge_status_hotsocket_ref(recharge, result):
     """
     Set recharge object status to In Process and save the hotsocket reference.
     """
-    hotsocket_ref = result["response"]["hotsocket_ref"]
-    recharge.hotsocket_ref = hotsocket_ref
+    if "hotsocket_ref" in result["response"]:
+        hotsocket_ref = result["response"]["hotsocket_ref"]
+        recharge.hotsocket_ref = hotsocket_ref
+    else:
+        recharge.status = 3
     recharge.save()
     return hotsocket_ref
 
@@ -217,11 +220,18 @@ class Hotsocket_Get_Airtime(Task):
                 l.info("Making hotsocket recharge request")
                 result = self.request_hotsocket_recharge(recharge_id)
 
-                l.info("Updating recharge object status and hotsocket_ref")
-                hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
-                                                                     result)
-                return "Recharge for %s: Queued at Hotsocket "\
-                    "#%s" % (recharge.msisdn, hotsocket_ref)
+                if "hotsocket_ref" not in result["response"]:
+                    l.info("Hotsocket error: %s" %
+                           result["response"]["message"])
+                    # todo test this
+                    return "Recharge for %s: Not Queued at Hotsocket " % (
+                           recharge.msisdn, )
+                else:
+                    l.info("Updating recharge object status and hotsocket_ref")
+                    hotsocket_ref = \
+                        update_recharge_status_hotsocket_ref(recharge, result)
+                    return "Recharge for %s: Queued at Hotsocket "\
+                        "#%s" % (recharge.msisdn, hotsocket_ref)
             else:
                 l.info("Marking recharge as unrecoverable")
                 recharge.status = 4
