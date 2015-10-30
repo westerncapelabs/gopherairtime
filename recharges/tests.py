@@ -141,8 +141,6 @@ class TestRechargeFunctions(TaskTestCase):
 
         self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
 
-        # check product_code and network
-
     def test_prep_login_data(self):
         # Setup
         # Execute
