@@ -223,7 +223,7 @@ class Hotsocket_Get_Airtime(Task):
                 return "Recharge for %s: Queued at Hotsocket "\
                     "#%s" % (recharge.msisdn, hotsocket_ref)
             else:
-                l.info("Mark recharge has unrecoverable")
+                l.info("Marking recharge as unrecoverable")
                 recharge.status = 4
                 recharge.save()
                 return "Mobile network operator could not be determined for "\
