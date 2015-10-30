@@ -237,7 +237,9 @@ class Check_Hotsocket_Status(Task):
     name = "recharges.tasks.Check_Hotsocket_Status"
 
     def prep_hotsocket_status_dict(self, recharge_id):
-
+        """
+        Constructs the dict needed to make a hotsocket recharge status request
+        """
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
