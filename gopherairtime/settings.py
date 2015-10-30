@@ -74,7 +74,7 @@ WSGI_APPLICATION = 'gopherairtime.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get(
-            'GOPHERAPI_DATABASE',
+            'DATABASE_URL',
             'postgres://postgres:@localhost/gopherairtime')),
 }
 
@@ -132,7 +132,7 @@ REST_FRAMEWORK = {
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
-BROKER_URL = os.environ.get('GOPHERAPI_REDIS', 'redis://localhost:6379/0')
+BROKER_URL = os.environ.get('RABBITMQ_URL', 'redis://localhost:6379/0')
 
 from kombu import Exchange, Queue
 
@@ -169,9 +169,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 
 HOTSOCKET_API_ENDPOINT = 'http://api.hotsocket.co.za:8080/test'
-HOTSOCKET_API_USERNAME = 'Replaceme_username'
-HOTSOCKET_API_PASSWORD = 'Replaceme_password'
-HOTSOCKET_REFBASE = "10000"
+HOTSOCKET_API_USERNAME = os.environ.get('HOTSOCKET_API_USERNAME', 'Replaceme_username')
+HOTSOCKET_API_PASSWORD = os.environ.get('HOTSOCKET_API_PASSWORD', 'Replaceme_password')
+HOTSOCKET_REFBASE = os.environ.get('HOTSOCKET_REFBASE', '10000')
 HOTSOCKET_CODES = {
     "LOGIN_SUCCESSFUL": "0000",
     "LOGIN_FAILURE": "5010",
