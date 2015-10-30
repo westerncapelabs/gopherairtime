@@ -30,18 +30,18 @@ create db ::
     dokku postgres:connect gopherairtime-clientname-db
     CREATE EXTENSION hstore;
 
-connect db ::
-
-    dokku postgres:link gopherairtime-clientname-db gopherairtime-clientname
-
 set up rabbitmq for workers ::
 
     dokku rabbitmq:create gopherairtime-clientname-rabbitmq
-    dokku rabbitmq:link gopherairtime-clientname-rabbitmq gopherairtime-clientname
 
 set up enviroment variables ::
 
     dokku config:set gopherairtime-clientname
+
+link the apps together ::
+
+    dokku postgres:link gopherairtime-clientname-db gopherairtime-clientname
+    dokku rabbitmq:link gopherairtime-clientname-rabbitmq gopherairtime-clientname
 
 deploy app with git push locally then ::
 
