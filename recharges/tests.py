@@ -11,7 +11,7 @@ from rest_framework.authtoken.models import Token
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
-                             hotsocket_status,
+                             check_hotsocket_status,
                              normalize_msisdn, look_up_mobile_operator,
                              update_recharge_status_hotsocket_ref)
 
@@ -289,6 +289,17 @@ class TestRechargeFunctions(TaskTestCase):
         unknown = look_up_mobile_operator(msisdn_unknown)
         self.assertEqual(unknown, False)
 
+    def test_prep_hotsocket_status_dict(self):
+        self.make_account()
+
+        result = check_hotsocket_status.\
+            prep_hotsocket_status_dict(recharge_id=1003, hs_reference=4507)
+
+        self.assertEqual(result['reference'], 11003)
+        self.assertEqual(result['hotsocket_ref'], 4507)
+        self.assertEqual(result['token'], '1234')
+        self.assertEqual(result['username'], 'Replaceme_username')
+
 
 class TestRechargeTasks(TaskTestCase):
 
@@ -457,16 +468,7 @@ class TestRechargeTasks(TaskTestCase):
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is unrecoverable")
 
-    def test_Check_Hotsocket_Status(self):
+    def test_check_hotsocket_status(self):
         recharge_id = self.make_recharge()
-        result = hotsocket_status(recharge_id)
-        self.assertEqual(result, "recharge is succesful")
-
-
-class TestRechrgeStatus(TaskTestCase):
-    def test_prep_hotsocket_status_dict(self):
-        self.make_account()
-        result = hotsocket_status.prep_hotsocket_status_dict(recharge_id=1003,
-                                                             hs_reference=4507)
-        self.assertEqual(result['reference'], 11003)
-        self.assertEqual(result['hotsocket_ref'], 4507)
+        result = check_hotsocket_status(recharge_id)
+        self.assertEqual(result, "recharge is successful")
