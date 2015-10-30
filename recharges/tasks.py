@@ -35,7 +35,7 @@ def update_recharge_status_hotsocket_ref(recharge, result):
     return hotsocket_ref
 
 
-def normalize_msisdn(msisdn, country_code='',):
+def normalize_msisdn(msisdn, country_code='27'):
     """
     Gets msisdn and cleans it to the correct format when returned
     """
@@ -59,17 +59,27 @@ def look_up_mobile_operator(msisdn):
     operator prefix with the sliced msisdn then returns the correct
     network_code else false
     """
-    mtn = ['+27603', '+27604', '+27605', '+27710', '+27717', '+27718',
-           '+27719', '+27810', '+2783', '+2773', '+2778']
+    mtn = ['+27603', '+27604', '+27605',
+           '+27710',
+           '+27717', '+27718', '+27719',
+           '+27810',
+           '+2783', '+2773', '+2778']
 
-    cellc = ['+2784', '+2774', '+27610', '+27611', '+27612', '+27613']
+    cellc = ['+27610', '+27611', '+27612', '+27613',
+             '+27615',
+             '+27618', '+27619', '+27620', '+27621', '+27622', '+27623',
+             '+27624',
+             '+2784', '+2774']
 
-    telkom = ['+27811', '+27812', '+27812', '+27813', '+27814',
-              '+27815', '+27817']
+    telkom = ['+27817']
 
-    vodacom = ['+27711', '+27712', '+27713', '+27714', '+27715', '+27716',
-               '+2772', '+2776', '+2779', '+2782', '+27818', '+27606',
-               '+27607', '+2768', '+27609']
+    vodacom = ['+27606', '+27607', '+27608', '+27609',
+               '+27711', '+27712', '+27713', '+27714', '+27715', '+27716',
+               '+27818',
+               '+2782', '+2772', '+2776', '+2779']
+
+    eighta = ['+27614',
+              '+27811', '+27812', '+27813', '+27814', '+27815']
 
     if msisdn[0:5] in mtn or msisdn[0:6] in mtn:
         return "MTN"
@@ -79,6 +89,8 @@ def look_up_mobile_operator(msisdn):
         return "TELKOM"
     elif msisdn[0:5] in vodacom or msisdn[0:6] in vodacom:
         return "VOD"
+    elif msisdn[0:5] in eighta or msisdn[0:6] in eighta:
+        return "TELKOM"
     else:
         return False
 
@@ -171,7 +183,7 @@ class Hotsocket_Get_Airtime(Task):
             'product_code': recharge.product_code,
             'network_code': recharge.network_code,
             'denomination': recharge.amount,
-            'reference': recharge_id + settings.HOTSOCKET_REFBASE
+            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE)
         }
         return hotsocket_data
 
@@ -195,25 +207,27 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
         if status == 0:
             recharge.status = 1
+            recharge.msisdn = normalize_msisdn(recharge.msisdn, '27')
             recharge.save()
+            mno = look_up_mobile_operator(recharge.msisdn)
+            if mno:
+                recharge.network_code = mno
+                recharge.save()
 
-            recharge.msisdn = normalize_msisdn(recharge.msisdn)
-            recharge.save()
+                l.info("Making hotsocket recharge request")
+                result = self.request_hotsocket_recharge(recharge_id)
 
-            recharge.network_code = look_up_mobile_operator(recharge.
-                                                            msisdn)
-            recharge.save()
-
-            l.info("Making hotsocket recharge request")
-            result = self.request_hotsocket_recharge(recharge_id)
-
-            l.info("Updating recharge object status and hotsocket_ref")
-            hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
-                                                                 result)
-            # Fire check_hotsocket_status task with a delay of 5 minutes
-
-            return "Recharge for %s: Queued at Hotsocket "\
-                "#%s" % (recharge.msisdn, hotsocket_ref)
+                l.info("Updating recharge object status and hotsocket_ref")
+                hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
+                                                                     result)
+                return "Recharge for %s: Queued at Hotsocket "\
+                    "#%s" % (recharge.msisdn, hotsocket_ref)
+            else:
+                l.info("Mark recharge has unrecoverable")
+                recharge.status = 4
+                recharge.save()
+                return "Mobile network operator could not be determined for "\
+                    "%s" % recharge.msisdn
         elif status == 1:
             return "airtime request for %s already in process by another"\
                 " worker" % recharge.msisdn
@@ -245,9 +259,8 @@ class Check_Hotsocket_Status(Task):
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
             'token': get_token(),
-            'reference': recharge_id + settings.HOTSOCKET_REFBASE,
+            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE),
         }
-
         return hotsocket_data
 
     def request_hotsocket_status(self, recharge_id):

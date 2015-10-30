@@ -28,7 +28,7 @@ class TaskTestCase(TestCase):
         account = Account.objects.create(token=token)
         return account.id
 
-    def make_recharge(self, amount=100.00, msisdn="+2782003453", status=0):
+    def make_recharge(self, amount=100.00, msisdn="+27820003453", status=0):
         airtime = Recharge.objects.create(
             amount=amount, msisdn=msisdn, status=status)
         return airtime.id
@@ -121,7 +121,7 @@ class TestRechargeFunctions(TaskTestCase):
         recharge = get_recharge(recharge_id)
         # Check
         self.assertEqual(recharge.amount, 100)
-        self.assertEqual(recharge.msisdn, '+2782003453')
+        self.assertEqual(recharge.msisdn, '+27820003453')
         self.assertEqual(recharge.status, 0)
         self.assertEqual(recharge.hotsocket_ref, 0)
 
@@ -135,14 +135,12 @@ class TestRechargeFunctions(TaskTestCase):
         # Execute
         hotsocket_data = hotsocket_get_airtime.prep_hotsocket_data(recharge_id)
         # Check
-        self.assertEqual(hotsocket_data["recipient_msisdn"], "+2782003453")
+        self.assertEqual(hotsocket_data["recipient_msisdn"], "+27820003453")
         self.assertEqual(hotsocket_data["token"], '1234')
         self.assertEqual(hotsocket_data["product_code"], 'AIRTIME')
         self.assertEqual(hotsocket_data["network_code"], 'VOD')
 
         self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
-
-        # check product_code and network
 
     def test_prep_login_data(self):
         # Setup
@@ -437,12 +435,12 @@ class TestRechargeTasks(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
 
-        recharge_id = self.make_recharge(msisdn="+27 71145557", status=0)
+        recharge_id = self.make_recharge(msisdn="+27 711455657", status=0)
         # Execute
         result = hotsocket_get_airtime.delay(recharge_id)
         # Check
-        self.assertEqual(result.get(),
-                         "Recharge for +2771145557: Queued at Hotsocket #4487")
+        self.assertEqual(result.get(), "Recharge for +27711455657: Queued at "
+                         "Hotsocket #4487")
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 1)
         self.assertEqual(recharge.hotsocket_ref, 4487)
@@ -450,8 +448,22 @@ class TestRechargeTasks(TaskTestCase):
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
-        self.assertEqual(recharge.msisdn, '+2771145557')
+        self.assertEqual(recharge.msisdn, '+27711455657')
         self.assertEqual(recharge.network_code, 'VOD')
+
+    def test_hotsocket_get_airtime_bad_mno(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge(msisdn="0951112222", status=0)
+        # Execute
+        result = hotsocket_get_airtime.delay(recharge_id)
+        # Check
+        self.assertEqual(result.get(),
+                         "Mobile network operator could not be determined for "
+                         "+27951112222")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.msisdn, '+27951112222')
+        self.assertEqual(recharge.status, 4)
 
     def test_hotsocket_get_airtime_in_process(self):
         # Setup
