@@ -240,6 +240,7 @@ class Check_Hotsocket_Status(Task):
         """
         Constructs the dict needed to make a hotsocket recharge status request
         """
+
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
@@ -248,6 +249,15 @@ class Check_Hotsocket_Status(Task):
         }
 
         return hotsocket_data
+
+    def request_hotsocket_status(self, recharge_id):
+        # recharge = get_recharge(recharge_id)
+
+        hotsocket_data = self.prep_hotsocket_status_dict(recharge_id)
+        recharge_status_post = requests.post("%s/status" %
+                                             settings.HOTSOCKET_API_ENDPOINT,
+                                             data=hotsocket_data)
+        return recharge_status_post.json()
 
     def run(self, recharge_id, **kwargs):
         # Call get_recharge() by recharge_id to get recharge object
