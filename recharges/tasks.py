@@ -255,6 +255,6 @@ class Check_Hotsocket_Status(Task):
         # Check if hotsocket status code is 000
         # Recharge status code should be 2 and such status should be saved
         # Return "Recharge for " + recharge.msisdn + " is successful"
-        return "recharge is succesful"
+        return "recharge is successful"
 
-hotsocket_status = Check_Hotsocket_Status()
+check_hotsocket_status = Check_Hotsocket_Status()
