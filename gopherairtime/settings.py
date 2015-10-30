@@ -153,10 +153,10 @@ CELERY_IMPORTS = (
 CELERY_CREATE_MISSING_QUEUES = True
 CELERY_ROUTES = {
     'recharges.tasks.hotsocket_login': {
-        'queue': 'gopherairtime_hotsocket',
+        'queue': 'gopherairtime',
     },
     'recharges.tasks.hotsocket_process_queue': {
-        'queue': 'gopherairtime_hotsocket',
+        'queue': 'gopherairtime',
     },
 }
 
