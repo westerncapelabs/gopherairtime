@@ -155,12 +155,19 @@ CELERY_ROUTES = {
     'recharges.tasks.hotsocket_login': {
         'queue': 'gopherairtime_hotsocket',
     },
+    'recharges.tasks.hotsocket_process_queue': {
+        'queue': 'gopherairtime_hotsocket',
+    },
 }
 
 CELERYBEAT_SCHEDULE = {
     'login-every-60-minutes': {
         'task': 'recharges.tasks.hotsocket_login',
         'schedule': timedelta(minutes=60),
+    },
+    'recharge-every-1-minutes': {
+        'task': 'recharges.tasks.hotsocket_process_queue',
+        'schedule': timedelta(minutes=1),
     },
 }
 
