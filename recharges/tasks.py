@@ -183,7 +183,7 @@ class Hotsocket_Get_Airtime(Task):
             'product_code': recharge.product_code,
             'network_code': recharge.network_code,
             'denomination': recharge.amount,
-            'reference': recharge_id + settings.HOTSOCKET_REFBASE
+            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE)
         }
         return hotsocket_data
 
