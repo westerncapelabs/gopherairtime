@@ -299,6 +299,33 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(result['token'], '1234')
         self.assertEqual(result['username'], 'Replaceme_username')
 
+    @responses.activate
+    def test_request_hotsocket_status(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+        expected_response_good = {
+            "response": {
+                "message": "Status lookup successful.",
+                "running_balance": 0,
+                "status": "0000",
+                "recharge_status_cd": 3,
+                "recharge_status": "Successful"
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+        # Execute
+        result = check_hotsocket_status.request_hotsocket_status(recharge_id)
+        # Check
+        self.assertEqual(result["response"]["status"], "0000")
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
 
 class TestRechargeTasks(TaskTestCase):
 
