@@ -1,25 +1,14 @@
 from django.conf.urls import patterns, include, url
-
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-admin.autodiscover()
 
-urlpatterns = patterns('',
-    # API URLS
-    url(r'^', include('recharge.urls')),
 
-    # VIEWS URLS
-    url(r'^', include('frontend.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    (r'^grappelli/', include('grappelli.urls')), # grappelli URLS
-
-    (r'^admin/', include(admin.site.urls)),
-
-    # Django Registration
-    (r'^accounts/', include('registration.backends.simple.urls')),
+urlpatterns = patterns(
+    '',
+    url(r'^grappelli/', include('grappelli.urls')),
+    url(r'^admin/',  include(admin.site.urls)),
+    url(r'^api/v1/auth/',
+        include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api/v1/token-auth/',
+        'rest_framework.authtoken.views.obtain_auth_token'),
+    url(r'^api/v1/', include('recharges.urls')),
 )
-

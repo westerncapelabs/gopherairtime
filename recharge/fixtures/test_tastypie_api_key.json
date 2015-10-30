@@ -1,1 +1,0 @@
-[{"pk": 1, "model": "tastypie.apikey", "fields": {"user": 1, "key": "api_key", "created": "2013-10-09T14:32:17Z"}}]

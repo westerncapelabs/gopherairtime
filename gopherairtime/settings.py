@@ -1,70 +1,56 @@
 """
 Django settings for gopherairtime project.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/1.7/topics/settings/
+
+For the full list of settings and their values, see
+https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import djcelery
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+from datetime import timedelta
+import dj_database_url
 
-def abspath(*args):
-    """convert relative paths to absolute paths relative to PROJECT_ROOT"""
-    return os.path.join(PROJECT_ROOT, *args)  
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'gopher',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': '5432',
-    }
-}
+# See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'please-change-me'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'REPLACEME')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', True)
+
 TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1']
+ALLOWED_HOSTS = ['*']
+
+
+# Application definition
 
 INSTALLED_APPS = (
-    # Admin Tools
-    'grappelli.dashboard',
+    # admin
     'grappelli',
-
-    # Django
     'django.contrib.admin',
+    # core
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
-    'south',
-    'gunicorn',
-    'django_nose',
-    'raven.contrib.django.raven_compat',
+    # 3rd party
     'djcelery',
-    'djcelery_email',
-    'debug_toolbar',
-    'users',
-    'recharge',
-    'celerytasks',
-    'tastypie',
-    'kombu.transport.django',
-    'registration',
-    'frontend',
+    'django_hstore',
+    'raven.contrib.django.raven_compat',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    # us
+    'recharges',
+
 )
 
 MIDDLEWARE_CLASSES = (
@@ -72,6 +58,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -81,10 +68,21 @@ ROOT_URLCONF = 'gopherairtime.urls'
 WSGI_APPLICATION = 'gopherairtime.wsgi.application'
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/1.6/topics/i18n/
+# Database
+# https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 
-LANGUAGE_CODE = 'en-us'
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get(
+            'DATABASE_URL',
+            'postgres://postgres:@localhost/gopherairtime')),
+}
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/1.7/topics/i18n/
+
+LANGUAGE_CODE = 'en-gb'
 
 TIME_ZONE = 'UTC'
 
@@ -96,182 +94,93 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
-STATIC_ROOT = abspath('static')
-STATIC_URL = '/static/'
+# https://docs.djangoproject.com/en/1.7/howto/static-files/
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    abspath('templates'),
-)
+STATIC_ROOT = 'staticfiles'
+STATIC_URL = '/static/'
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.request",
-)
-
-SITE_ID = 1
-
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
-}
-
-# # Celery configuration options
-# BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-
-# # Uncomment if you're running in DEBUG mode and you want to skip the broker
-# # and execute tasks immediate instead of deferring them to the queue / workers.
-# # CELERY_ALWAYS_EAGER = DEBUG
-
-# # Tell Celery where to find the tasks
-# CELERY_IMPORTS = ('celery_app.tasks',)
-
-# # Defer email sending to Celery, except if we're in debug mode,
-# # then just print the emails to stdout for debugging.
-# EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-# if DEBUG:
-#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Django debug toolbar
-DEBUG_TOOLBAR_CONFIG = {
-    'INTERCEPT_REDIRECTS': False,
-    'ENABLE_STACKTRACES': True,
-}
-
-# South configuration variables
-
-import test_runner
-# Using custome test runner
-TEST_RUNNER = "gopherairtime.test_runner.MyRunner"
-
-SKIP_SOUTH_TESTS = True     # Do not run the south tests as part of our
-                            # test suite.
-SOUTH_TESTS_MIGRATE = False  # Do not run the migrations for our tests.
-                             # We are assuming that our models.py are correct
-                             # for the tests and as such nothing needs to be
-                             # migrated.
+# TEMPLATE_CONTEXT_PROCESSORS = (
+#     "django.core.context_processors.request",
+# )
 
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
-    # 'dsn': 'http://public:secret@example.com/1',
+    # 'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', "http://localhost"),
 }
 
-djcelery.setup_loader()
-BROKER_URL = "amqp://guest:guest@localhost:5672/"
+# REST Framework conf defaults
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
+    'PAGINATE_BY': None,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
+}
 
-from datetime import timedelta
-
-CELERY_RESULT_BACKEND = "database"
+# Celery configuration options
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
+BROKER_URL = os.environ.get('RABBITMQ_URL', 'redis://localhost:6379/0')
+
+from kombu import Exchange, Queue
+
+CELERY_DEFAULT_QUEUE = 'gopherairtime'
+CELERY_QUEUES = (
+    Queue('gopherairtime',
+          Exchange('gopherairtime'),
+          routing_key='gopherairtime'),
+)
+
+CELERY_ALWAYS_EAGER = False
+
+# Tell Celery where to find the tasks
+CELERY_IMPORTS = (
+    'recharges.tasks',
+)
+
+CELERY_CREATE_MISSING_QUEUES = True
+CELERY_ROUTES = {
+    'recharges.tasks.hotsocket_login': {
+        'queue': 'gopherairtime_hotsocket',
+    },
+}
+
 CELERYBEAT_SCHEDULE = {
-    'login-every-115-minutes': {
-        'task': 'celerytasks.tasks.hotsocket_login',
-        'schedule': timedelta(minutes=115),
-    },
-
-    'run-queries-60-seconds': {
-        'task': 'celerytasks.tasks.run_queries',
-        'schedule': timedelta(seconds=60),
-    },
-
-    'run-balance-queries-60-minutes': {
-        'task': 'celerytasks.tasks.balance_checker',
+    'login-every-60-minutes': {
+        'task': 'recharges.tasks.hotsocket_login',
         'schedule': timedelta(minutes=60),
     },
 }
 
-GRAPPELLI_INDEX_DASHBOARD = 'gopherairtime.grappelli_dashboard.CustomIndexDashboard'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
 
-GRAPPELLI_ADMIN_TITLE = "GOPHER AIRTIME"
-
-# DJANGO registration
-ACCOUNT_ACTIVATION_DAYS = 7  # In days
-
-if DEBUG:
-    INTERNAL_IPS = ('127.0.0.1', 'localhost', '::1')
-
-    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + ('debug_toolbar.middleware.DebugToolbarMiddleware',)
-    DEBUG_TOOLBAR_PANELS = (
-        'debug_toolbar.panels.version.VersionDebugPanel',
-        'debug_toolbar.panels.timer.TimerDebugPanel',
-        'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
-        'debug_toolbar.panels.headers.HeaderDebugPanel',
-        'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
-        'debug_toolbar.panels.template.TemplateDebugPanel',
-        'debug_toolbar.panels.sql.SQLDebugPanel',
-        'debug_toolbar.panels.signals.SignalDebugPanel',
-        'debug_toolbar.panels.logger.LoggingPanel',
-    )
-
-    DEBUG_TOOLBAR_CONFIG = {
-        'INTERCEPT_REDIRECTS': False,
-        'ENABLE_STACKTRACES': True,
-    }
-
-# Set this to the appropriate values
-ADMIN_EMAIL = {
-    "threshold_limit": "mike+gopher_sentry@westerncapelabs.com",
-    "from_gopher": "mike+from_gopher@westerncapelabs.com"
-    }
+HOTSOCKET_API_ENDPOINT = 'http://api.hotsocket.co.za:8080/test'
+HOTSOCKET_API_USERNAME = os.environ.get('HOTSOCKET_API_USERNAME', 'Replaceme_username')
+HOTSOCKET_API_PASSWORD = os.environ.get('HOTSOCKET_API_PASSWORD', 'Replaceme_password')
+HOTSOCKET_REFBASE = os.environ.get('HOTSOCKET_REFBASE', '10000')
+HOTSOCKET_CODES = {
+    "LOGIN_SUCCESSFUL": "0000",
+    "LOGIN_FAILURE": "5010",
+}
 
 
-MANDRILL_KEY = ""
-
-
-# PUSHOVER STUFF
-PUSHOVER_APP = ""
-PUSHOVER_USERS = {"mike": ""}
-PUSHOVER_BASE_URL = "https://api.pushover.net/1/"
-PUSHOVER_MESSAGE_URL = PUSHOVER_BASE_URL + "messages.json"
-
-KATO_KEY = ""
-
-THRESHOLD_WARNING_LEVEL = 1000
-
-# ======================================================
-    # VUMIGO SMS SENDER CONFIG
-# ======================================================
-SMS_CONFIG = {"sender_type": "logging"}
-VUMIGO_API_URL = "http://go.vumi.org/api/v1/go/http_api_nostream"
-
-from api_settings import *
-
+import djcelery
+djcelery.setup_loader()
 try:
-    from production_settings import *
+    from gopherairtime.local_settings import *  # flake8: noqa
 except ImportError:
     pass

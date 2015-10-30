@@ -1,5 +1,6 @@
 *.py[cod]
-*.DS_Store
+.cache
+
 # C extensions
 *.so
 
@@ -7,7 +8,6 @@
 *.egg
 *.egg-info
 dist
-build
 eggs
 parts
 bin
@@ -36,6 +36,5 @@ nosetests.xml
 /ve/
 logs/*.log
 *.pid
-
-gopherairtime/static/admin/*
-gopherairtime/static/grappelli/*
+local_settings.py
+.DS_Store
