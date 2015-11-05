@@ -182,7 +182,7 @@ class Hotsocket_Get_Airtime(Task):
             'password': settings.HOTSOCKET_API_PASSWORD,
             'as_json': True,
             'token': get_token(),
-            'recipient_msisdn': recharge.msisdn,
+            'recipient_msisdn': recharge.msisdn[1:],
             'product_code': recharge.product_code,
             'network_code': recharge.network_code,
             'denomination': recharge.amount,

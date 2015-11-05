@@ -134,7 +134,7 @@ class TestRechargeFunctions(TaskTestCase):
         # Execute
         hotsocket_data = hotsocket_get_airtime.prep_hotsocket_data(recharge_id)
         # Check
-        self.assertEqual(hotsocket_data["recipient_msisdn"], "+27820003453")
+        self.assertEqual(hotsocket_data["recipient_msisdn"], "27820003453")
         self.assertEqual(hotsocket_data["token"], '1234')
         self.assertEqual(hotsocket_data["product_code"], 'AIRTIME')
         self.assertEqual(hotsocket_data["network_code"], 'VOD')
