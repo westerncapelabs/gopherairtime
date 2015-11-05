@@ -289,11 +289,34 @@ class Check_Hotsocket_Status(Task):
         hs_status_code = hs_status["response"]["status"]
 
         if hs_status_code == "0000":
-            # recharge successful
+            # recharge status lookup successful
+            hs_recharge_status_cd = hs_status["response"]["recharge_status_cd"]
             recharge = get_recharge(recharge_id)
-            recharge.status = 2
-            recharge.save()
-            return "Recharge for %s successful" % recharge.msisdn
+            if hs_recharge_status_cd == 3:
+                # Success
+                recharge.status = 2
+                recharge.save()
+                return "Recharge for %s successful" % recharge.msisdn
+            elif hs_recharge_status_cd == 2:
+                # Failed
+                recharge.status = 3
+                recharge.save()
+                return "Recharge for %s failed. Reason: %s" % (
+                    recharge.msisdn, hs_status["response"]["recharge_status"])
+            elif hs_recharge_status_cd == 1:
+                # Pre-submission error.
+                recharge.status = 4
+                recharge.save()
+                return "Recharge pre-submission for %s errored" % (
+                    recharge.msisdn)
+            elif hs_recharge_status_cd == 0:
+                # Submitted, not yet succesful.
+                recharge.status = 1
+                recharge.save()
+                # requeue in 5 mins
+                self.retry(args=[recharge_id], countdown=5*60)
+                return "Recharge for %s pending. Check requeued." % (
+                    recharge.msisdn,)
         elif hs_status_code == 887:
             # invalid token
             pass
