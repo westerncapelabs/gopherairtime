@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = os.environ.get('SECRET_KEY', 'REPLACEME')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', False)
+DEBUG = os.environ.get('DEBUG', True)
 
 TEMPLATE_DEBUG = DEBUG
 
@@ -111,7 +111,7 @@ STATIC_URL = '/static/'
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
-    # 'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', "http://localhost"),
+     'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', ""),
 }
 
 # REST Framework conf defaults
@@ -153,7 +153,10 @@ CELERY_IMPORTS = (
 CELERY_CREATE_MISSING_QUEUES = True
 CELERY_ROUTES = {
     'recharges.tasks.hotsocket_login': {
-        'queue': 'gopherairtime_hotsocket',
+        'queue': 'gopherairtime',
+    },
+    'recharges.tasks.hotsocket_process_queue': {
+        'queue': 'gopherairtime',
     },
 }
 
@@ -161,6 +164,10 @@ CELERYBEAT_SCHEDULE = {
     'login-every-60-minutes': {
         'task': 'recharges.tasks.hotsocket_login',
         'schedule': timedelta(minutes=60),
+    },
+    'recharge-every-1-minutes': {
+        'task': 'recharges.tasks.hotsocket_process_queue',
+        'schedule': timedelta(minutes=1),
     },
 }
 

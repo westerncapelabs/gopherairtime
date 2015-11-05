@@ -29,8 +29,11 @@ def update_recharge_status_hotsocket_ref(recharge, result):
     """
     Set recharge object status to In Process and save the hotsocket reference.
     """
-    hotsocket_ref = result["response"]["hotsocket_ref"]
-    recharge.hotsocket_ref = hotsocket_ref
+    if "hotsocket_ref" in result["response"]:
+        hotsocket_ref = result["response"]["hotsocket_ref"]
+        recharge.hotsocket_ref = hotsocket_ref
+    else:
+        recharge.status = 3
     recharge.save()
     return hotsocket_ref
 
@@ -172,6 +175,8 @@ class Hotsocket_Get_Airtime(Task):
 
         """
         Constructs the dict needed to make a hotsocket airtime request
+        msisdn needs no + for HS
+        denomination needs to be in cents for HS
         """
         recharge = get_recharge(recharge_id)
         hotsocket_data = {
@@ -179,10 +184,10 @@ class Hotsocket_Get_Airtime(Task):
             'password': settings.HOTSOCKET_API_PASSWORD,
             'as_json': True,
             'token': get_token(),
-            'recipient_msisdn': recharge.msisdn,
+            'recipient_msisdn': recharge.msisdn[1:],
             'product_code': recharge.product_code,
             'network_code': recharge.network_code,
-            'denomination': recharge.amount,
+            'denomination': int(recharge.amount*100),
             'reference': recharge_id + int(settings.HOTSOCKET_REFBASE)
         }
         return hotsocket_data
@@ -217,11 +222,18 @@ class Hotsocket_Get_Airtime(Task):
                 l.info("Making hotsocket recharge request")
                 result = self.request_hotsocket_recharge(recharge_id)
 
-                l.info("Updating recharge object status and hotsocket_ref")
-                hotsocket_ref = update_recharge_status_hotsocket_ref(recharge,
-                                                                     result)
-                return "Recharge for %s: Queued at Hotsocket "\
-                    "#%s" % (recharge.msisdn, hotsocket_ref)
+                if "hotsocket_ref" not in result["response"]:
+                    l.info("Hotsocket error: %s" %
+                           result["response"]["message"])
+                    # todo test this
+                    return "Recharge for %s: Not Queued at Hotsocket " % (
+                           recharge.msisdn, )
+                else:
+                    l.info("Updating recharge object status and hotsocket_ref")
+                    hotsocket_ref = \
+                        update_recharge_status_hotsocket_ref(recharge, result)
+                    return "Recharge for %s: Queued at Hotsocket "\
+                        "#%s" % (recharge.msisdn, hotsocket_ref)
             else:
                 l.info("Marking recharge as unrecoverable")
                 recharge.status = 4
