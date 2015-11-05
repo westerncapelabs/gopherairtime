@@ -175,6 +175,8 @@ class Hotsocket_Get_Airtime(Task):
 
         """
         Constructs the dict needed to make a hotsocket airtime request
+        msisdn needs no + for HS
+        denomination needs to be in cents for HS
         """
         recharge = get_recharge(recharge_id)
         hotsocket_data = {
@@ -185,7 +187,7 @@ class Hotsocket_Get_Airtime(Task):
             'recipient_msisdn': recharge.msisdn[1:],
             'product_code': recharge.product_code,
             'network_code': recharge.network_code,
-            'denomination': recharge.amount,
+            'denomination': int(recharge.amount*100),
             'reference': recharge_id + int(settings.HOTSOCKET_REFBASE)
         }
         return hotsocket_data
