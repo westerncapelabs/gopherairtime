@@ -111,7 +111,7 @@ STATIC_URL = '/static/'
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
-    # 'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', "http://localhost"),
+     'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', ""),
 }
 
 # REST Framework conf defaults
