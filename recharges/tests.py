@@ -1,11 +1,13 @@
 import json
 import responses
+import pytest
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
+from celery import exceptions
 
 
 from recharges.models import Recharge, Account
@@ -510,7 +512,108 @@ class TestRechargeTasks(TaskTestCase):
                          "airtime request for +277244555 is unrecoverable")
 
     @responses.activate
-    def test_check_hotsocket_status(self):
+    def test_check_hotsocket_status_submitted(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Submitted, not yet succesful.",
+                "recharge_status": "Successful",
+                "running_balance": 0,
+                "recharge_status_cd": 0,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute and catch loop
+        with pytest.raises(exceptions.MaxRetriesExceededError) as excinfo:
+            check_hotsocket_status.delay(recharge_id)
+        assert "Can't retry recharges.tasks.Check_Hotsocket_Status" in \
+            str(excinfo.value)
+
+        # Check
+        self.assertEqual(len(responses.calls), 4)
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
+    @responses.activate
+    def test_check_hotsocket_status_presuberror(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Status lookup successful.",
+                "recharge_status": "Pre-submission error.",
+                "running_balance": 0,
+                "recharge_status_cd": 1,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute
+        result = check_hotsocket_status.delay(recharge_id)
+
+        # Check
+        self.assertEqual(result.get(),
+                         "Recharge pre-submission for +27820003453 errored")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 4)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
+    @responses.activate
+    def test_check_hotsocket_status_failed(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Status lookup successful.",
+                "recharge_status": "MNO reports invalid MSISDN (not prepaid). "
+                                   "You have not been billed for this.",
+                "running_balance": 0,
+                "recharge_status_cd": 2,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute
+        result = check_hotsocket_status.delay(recharge_id)
+
+        # Check
+        self.assertEqual(result.get(),
+                         "Recharge for +27820003453 failed. Reason: MNO "
+                         "reports invalid MSISDN (not prepaid). You have not "
+                         "been billed for this.")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 3)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
+    @responses.activate
+    def test_check_hotsocket_status_success(self):
         # Setup
         self.make_account()
         recharge_id = self.make_recharge()
