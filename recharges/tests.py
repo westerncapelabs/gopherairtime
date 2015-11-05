@@ -139,7 +139,7 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(hotsocket_data["recipient_msisdn"], "27820003453")
         self.assertEqual(hotsocket_data["token"], '1234')
         # denomination should be in cents
-        self.assertEqual(hotsocket_data["denomination"], '10000')
+        self.assertEqual(hotsocket_data["denomination"], 10000)
         self.assertEqual(hotsocket_data["product_code"], 'AIRTIME')
         self.assertEqual(hotsocket_data["network_code"], 'VOD')
 
