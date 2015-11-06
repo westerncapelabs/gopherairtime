@@ -520,7 +520,7 @@ class TestRechargeTasks(TaskTestCase):
         expected_response = {
             "response": {
                 "status": "0000",
-                "message": "Submitted, not yet succesful.",
+                "message": "Submitted, not yet successful.",
                 "recharge_status": "Successful",
                 "running_balance": 0,
                 "recharge_status_cd": 0,
