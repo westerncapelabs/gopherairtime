@@ -1,16 +1,24 @@
 import json
 import responses
+import pytest
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
+from celery import exceptions
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 
 from recharges.models import Recharge, Account
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
+                             check_hotsocket_status,
                              normalize_msisdn, look_up_mobile_operator,
                              update_recharge_status_hotsocket_ref)
 
@@ -138,7 +146,7 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(hotsocket_data["recipient_msisdn"], "27820003453")
         self.assertEqual(hotsocket_data["token"], '1234')
         # denomination should be in cents
-        self.assertEqual(hotsocket_data["denomination"], '10000')
+        self.assertEqual(hotsocket_data["denomination"], 10000)
         self.assertEqual(hotsocket_data["product_code"], 'AIRTIME')
         self.assertEqual(hotsocket_data["network_code"], 'VOD')
 
@@ -289,6 +297,43 @@ class TestRechargeFunctions(TaskTestCase):
         unknown = look_up_mobile_operator(msisdn_unknown)
         self.assertEqual(unknown, False)
 
+    def test_prep_hotsocket_status_dict(self):
+        self.make_account()
+
+        result = check_hotsocket_status.\
+            prep_hotsocket_status_dict(recharge_id=1003)
+
+        self.assertEqual(result['reference'], 11003)
+        self.assertEqual(result['token'], '1234')
+        self.assertEqual(result['username'], 'Replaceme_username')
+
+    @responses.activate
+    def test_request_hotsocket_status(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+        expected_response_good = {
+            "response": {
+                "message": "Status lookup successful.",
+                "running_balance": 0,
+                "status": "0000",
+                "recharge_status_cd": 3,
+                "recharge_status": "Successful"
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response_good),
+            status=200, content_type='application/json')
+        # Execute
+        result = check_hotsocket_status.request_hotsocket_status(recharge_id)
+        # Check
+        self.assertEqual(result["response"]["status"], "0000")
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
 
 class TestRechargeTasks(TaskTestCase):
 
@@ -344,77 +389,81 @@ class TestRechargeTasks(TaskTestCase):
     @responses.activate
     def test_hotsocket_process_queue(self):
         # Setup
-        self.make_account()
-        r1 = self.make_recharge()
-        r2 = self.make_recharge(status=1)
-        r3 = self.make_recharge(status=2)
-        r4 = self.make_recharge()
+        with patch("recharges.tasks.check_hotsocket_status.apply_async",
+                   lambda args, countdown: True):
+            self.make_account()
+            r1 = self.make_recharge()
+            r2 = self.make_recharge(status=1)
+            r3 = self.make_recharge(status=2)
+            r4 = self.make_recharge()
 
-        expected_response_good = {
-            "response": {
-                "hotsocket_ref": 4487,
-                "serveport_ref": 4487,
-                "message": "Successfully submitted recharge",
-                "status": "0000",
-                "token": "myprocessqueue"
+            expected_response_good = {
+                "response": {
+                    "hotsocket_ref": 4487,
+                    "serveport_ref": 4487,
+                    "message": "Successfully submitted recharge",
+                    "status": "0000",
+                    "token": "myprocessqueue"
+                }
             }
-        }
-        responses.add(
-            responses.POST,
-            "http://test-hotsocket/recharge",
-            json.dumps(expected_response_good),
-            status=200, content_type='application/json')
+            responses.add(
+                responses.POST,
+                "http://test-hotsocket/recharge",
+                json.dumps(expected_response_good),
+                status=200, content_type='application/json')
 
-        # Execute
-        result = hotsocket_process_queue.delay()
-        # Check
-        self.assertEqual(result.get(), "2 requests queued to Hotsocket")
-        r1 = Recharge.objects.get(id=r1)
-        r2 = Recharge.objects.get(id=r2)
-        r3 = Recharge.objects.get(id=r3)
-        r4 = Recharge.objects.get(id=r4)
-        self.assertEqual(r1.status, 1)
-        self.assertEqual(r2.status, 1)
-        self.assertEqual(r3.status, 2)
-        self.assertEqual(r4.status, 1)
+            # Execute
+            result = hotsocket_process_queue.delay()
+            # Check
+            self.assertEqual(result.get(), "2 requests queued to Hotsocket")
+            r1 = Recharge.objects.get(id=r1)
+            r2 = Recharge.objects.get(id=r2)
+            r3 = Recharge.objects.get(id=r3)
+            r4 = Recharge.objects.get(id=r4)
+            self.assertEqual(r1.status, 1)
+            self.assertEqual(r2.status, 1)
+            self.assertEqual(r3.status, 2)
+            self.assertEqual(r4.status, 1)
 
-        self.assertEqual(len(responses.calls), 2)
+            self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
     def test_hotsocket_get_airtime_good(self):
         # Setup
-        self.make_account()
+        with patch("recharges.tasks.check_hotsocket_status.apply_async",
+                   lambda args, countdown: True):
+            self.make_account()
 
-        expected_response_good = {
-            "response": {
-                "hotsocket_ref": 4487,
-                "serveport_ref": 4487,
-                "message": "Successfully submitted recharge",
-                "status": "0000",
-                "token": "myprocessqueue"
+            expected_response_good = {
+                "response": {
+                    "hotsocket_ref": 4487,
+                    "serveport_ref": 4487,
+                    "message": "Successfully submitted recharge",
+                    "status": "0000",
+                    "token": "myprocessqueue"
+                }
             }
-        }
-        responses.add(
-            responses.POST,
-            "http://test-hotsocket/recharge",
-            json.dumps(expected_response_good),
-            status=200, content_type='application/json')
+            responses.add(
+                responses.POST,
+                "http://test-hotsocket/recharge",
+                json.dumps(expected_response_good),
+                status=200, content_type='application/json')
 
-        recharge_id = self.make_recharge(msisdn="+27 711455657", status=0)
-        # Execute
-        result = hotsocket_get_airtime.delay(recharge_id)
-        # Check
-        self.assertEqual(result.get(), "Recharge for +27711455657: Queued at "
-                         "Hotsocket #4487")
-        recharge = Recharge.objects.get(id=recharge_id)
-        self.assertEqual(recharge.status, 1)
-        self.assertEqual(recharge.hotsocket_ref, 4487)
-        """tests for the correct URL request"""
-        self.assertEqual(len(responses.calls), 1)
-        self.assertEqual(responses.calls[0].request.url,
-                         "http://test-hotsocket/recharge")
-        self.assertEqual(recharge.msisdn, '+27711455657')
-        self.assertEqual(recharge.network_code, 'VOD')
+            recharge_id = self.make_recharge(msisdn="+27 711455657", status=0)
+            # Execute
+            result = hotsocket_get_airtime.delay(recharge_id)
+            # Check
+            self.assertEqual(result.get(), "Recharge for +27711455657: "
+                             "Queued at Hotsocket #4487")
+            recharge = Recharge.objects.get(id=recharge_id)
+            self.assertEqual(recharge.status, 1)
+            self.assertEqual(recharge.hotsocket_ref, 4487)
+            """tests for the correct URL request"""
+            self.assertEqual(len(responses.calls), 1)
+            self.assertEqual(responses.calls[0].request.url,
+                             "http://test-hotsocket/recharge")
+            self.assertEqual(recharge.msisdn, '+27711455657')
+            self.assertEqual(recharge.network_code, 'VOD')
 
     def test_hotsocket_get_airtime_bad_mno(self):
         # Setup
@@ -470,3 +519,136 @@ class TestRechargeTasks(TaskTestCase):
         # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is unrecoverable")
+
+    @responses.activate
+    def test_check_hotsocket_status_submitted(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Submitted, not yet successful.",
+                "recharge_status": "Successful",
+                "running_balance": 0,
+                "recharge_status_cd": 0,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute and catch loop
+        with pytest.raises(exceptions.MaxRetriesExceededError) as excinfo:
+            check_hotsocket_status.delay(recharge_id)
+        assert "Can't retry recharges.tasks.Check_Hotsocket_Status" in \
+            str(excinfo.value)
+
+        # Check
+        self.assertEqual(len(responses.calls), 4)
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
+    @responses.activate
+    def test_check_hotsocket_status_presuberror(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Status lookup successful.",
+                "recharge_status": "Pre-submission error.",
+                "running_balance": 0,
+                "recharge_status_cd": 1,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute
+        result = check_hotsocket_status.delay(recharge_id)
+
+        # Check
+        self.assertEqual(result.get(),
+                         "Recharge pre-submission for +27820003453 errored")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 4)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
+    @responses.activate
+    def test_check_hotsocket_status_failed(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Status lookup successful.",
+                "recharge_status": "MNO reports invalid MSISDN (not prepaid). "
+                                   "You have not been billed for this.",
+                "running_balance": 0,
+                "recharge_status_cd": 2,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute
+        result = check_hotsocket_status.delay(recharge_id)
+
+        # Check
+        self.assertEqual(result.get(),
+                         "Recharge for +27820003453 failed. Reason: MNO "
+                         "reports invalid MSISDN (not prepaid). You have not "
+                         "been billed for this.")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 3)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")
+
+    @responses.activate
+    def test_check_hotsocket_status_success(self):
+        # Setup
+        self.make_account()
+        recharge_id = self.make_recharge()
+
+        expected_response = {
+            "response": {
+                "status": "0000",
+                "message": "Status lookup successful.",
+                "recharge_status": "Successful",
+                "running_balance": 0,
+                "recharge_status_cd": 3,
+            }
+        }
+        responses.add(
+            responses.POST,
+            "http://test-hotsocket/status",
+            json.dumps(expected_response),
+            status=200, content_type='application/json')
+
+        # Execute
+        result = check_hotsocket_status.delay(recharge_id)
+
+        # Check
+        self.assertEqual(result.get(),
+                         "Recharge for +27820003453 successful")
+        recharge = Recharge.objects.get(id=recharge_id)
+        self.assertEqual(recharge.status, 2)
+        self.assertEqual(responses.calls[0].request.url,
+                         "http://test-hotsocket/status")

@@ -232,6 +232,9 @@ class Hotsocket_Get_Airtime(Task):
                     l.info("Updating recharge object status and hotsocket_ref")
                     hotsocket_ref = \
                         update_recharge_status_hotsocket_ref(recharge, result)
+                    # check the status in 5 mins
+                    check_hotsocket_status.apply_async(args=[recharge_id],
+                                                       countdown=5*60)
                     return "Recharge for %s: Queued at Hotsocket "\
                         "#%s" % (recharge.msisdn, hotsocket_ref)
             else:
@@ -252,3 +255,102 @@ class Hotsocket_Get_Airtime(Task):
 
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
+
+
+class Check_Hotsocket_Status(Task):
+
+    """
+    Task to check hotsocket recharge request and sets the recharge model
+    status to successful if the airtime has been loaded to the user's phone.
+    """
+    name = "recharges.tasks.Check_Hotsocket_Status"
+
+    def prep_hotsocket_status_dict(self, recharge_id):
+        """
+        Constructs the dict needed to make a hotsocket recharge status request
+        """
+
+        hotsocket_data = {
+            'username': settings.HOTSOCKET_API_USERNAME,
+            'as_json': True,
+            'token': get_token(),
+            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE),
+        }
+        return hotsocket_data
+
+    def request_hotsocket_status(self, recharge_id):
+        hotsocket_data = self.prep_hotsocket_status_dict(recharge_id)
+        recharge_status_post = requests.post("%s/status" %
+                                             settings.HOTSOCKET_API_ENDPOINT,
+                                             data=hotsocket_data)
+        return recharge_status_post.json()
+
+    def run(self, recharge_id, **kwargs):
+        l = self.get_logger(**kwargs)
+        l.info("Looking up Hotsocket status")
+        hs_status = self.request_hotsocket_status(recharge_id)
+        hs_status_code = hs_status["response"]["status"]
+
+        if hs_status_code == "0000":
+            # recharge status lookup successful
+            hs_recharge_status_cd = hs_status["response"]["recharge_status_cd"]
+            recharge = get_recharge(recharge_id)
+            if hs_recharge_status_cd == 3:
+                # Success
+                recharge.status = 2
+                recharge.save()
+                return "Recharge for %s successful" % recharge.msisdn
+            elif hs_recharge_status_cd == 2:
+                # Failed
+                recharge.status = 3
+                recharge.save()
+                return "Recharge for %s failed. Reason: %s" % (
+                    recharge.msisdn, hs_status["response"]["recharge_status"])
+            elif hs_recharge_status_cd == 1:
+                # Pre-submission error.
+                recharge.status = 4
+                recharge.save()
+                return "Recharge pre-submission for %s errored" % (
+                    recharge.msisdn)
+            elif hs_recharge_status_cd == 0:
+                # Submitted, not yet succesful.
+                recharge.status = 1
+                recharge.save()
+                # requeue in 5 mins
+                self.retry(args=[recharge_id], countdown=5*60)
+                return "Recharge for %s pending. Check requeued." % (
+                    recharge.msisdn,)
+        elif hs_status_code == 887:
+            # invalid token
+            pass
+        elif hs_status_code == 889:
+            # expired token
+            pass
+        elif hs_status_code == 5000:
+            # system error
+            pass
+        elif hs_status_code == 6011:
+            # invalid product
+            pass
+        elif hs_status_code == 6012:
+            # invalid network code
+            pass
+        elif hs_status_code == 6013:
+            # non-numeric msisdn
+            pass
+        elif hs_status_code == 6014:
+            # malformed msisdn
+            pass
+        elif hs_status_code == 6016:
+            # duplicate reference
+            pass
+        elif hs_status_code == 6017:
+            # non-numeric reference
+            pass
+        elif hs_status_code == 6020:
+            # invalid network + product + denomination combination
+            pass
+
+        return "recharge is successful"
+
+check_hotsocket_status = Check_Hotsocket_Status()
