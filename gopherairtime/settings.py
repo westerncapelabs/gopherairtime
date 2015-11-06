@@ -175,7 +175,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 
-HOTSOCKET_API_ENDPOINT = 'http://api.hotsocket.co.za:8080/test'
+HOTSOCKET_API_ENDPOINT = os.environ.get('HOTSOCKET_API_ENDPOINT','http://api.hotsocket.co.za:8080/test')
 HOTSOCKET_API_USERNAME = os.environ.get('HOTSOCKET_API_USERNAME', 'Replaceme_username')
 HOTSOCKET_API_PASSWORD = os.environ.get('HOTSOCKET_API_PASSWORD', 'Replaceme_password')
 HOTSOCKET_REFBASE = os.environ.get('HOTSOCKET_REFBASE', '10000')
