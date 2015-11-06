@@ -232,6 +232,9 @@ class Hotsocket_Get_Airtime(Task):
                     l.info("Updating recharge object status and hotsocket_ref")
                     hotsocket_ref = \
                         update_recharge_status_hotsocket_ref(recharge, result)
+                    # check the status in 5 mins
+                    check_hotsocket_status.apply_async(args=[recharge_id],
+                                                       countdown=5*60)
                     return "Recharge for %s: Queued at Hotsocket "\
                         "#%s" % (recharge.msisdn, hotsocket_ref)
             else:
