@@ -25,19 +25,6 @@ def get_recharge(recharge_id):
     return recharge
 
 
-def update_recharge_status_hotsocket_ref(recharge, result):
-    """
-    Set recharge object status to In Process and save the hotsocket reference.
-    """
-    if "hotsocket_ref" in result["response"]:
-        hotsocket_ref = result["response"]["hotsocket_ref"]
-        recharge.hotsocket_ref = hotsocket_ref
-    else:
-        recharge.status = 3
-    recharge.save()
-    return hotsocket_ref
-
-
 def normalize_msisdn(msisdn, country_code='27'):
     """
     Gets msisdn and cleans it to the correct format when returned
@@ -223,7 +210,6 @@ class Hotsocket_Get_Airtime(Task):
         """
         Makes hotsocket airtime request
         """
-
         hotsocket_data = self.prep_hotsocket_data(recharge_id)
         recharge_post = requests.post("%s/recharge" %
                                       settings.HOTSOCKET_API_ENDPOINT,
@@ -238,26 +224,28 @@ class Hotsocket_Get_Airtime(Task):
         recharge = get_recharge(recharge_id)
         status = recharge.status
         if status == 0:
+            # Set status to In Process
             recharge.status = 1
             recharge.save()
+
             l.info("Making hotsocket recharge request")
             result = self.request_hotsocket_recharge(recharge_id)
-
-            if "hotsocket_ref" not in result["response"]:
-                l.info("Hotsocket error: %s" %
-                       result["response"]["message"])
-                # todo test this
-                return "Recharge for %s: Not Queued at Hotsocket " % (
-                       recharge.msisdn)
-            else:
-                l.info("Updating recharge object status and hotsocket_ref")
-                hotsocket_ref = \
-                    update_recharge_status_hotsocket_ref(recharge, result)
-                # check the status in 5 mins
+            if "hotsocket_ref" in result["response"]:
+                recharge.hotsocket_ref = result["response"]["hotsocket_ref"]
+                recharge.save()
                 check_hotsocket_status.apply_async(args=[recharge_id],
                                                    countdown=5*60)
                 return "Recharge for %s: Queued at Hotsocket "\
-                    "#%s" % (recharge.msisdn, hotsocket_ref)
+                    "#%s" % (recharge.msisdn, recharge.hotsocket_ref)
+            else:
+                if "message" in result["response"]:
+                    l.info("Hotsocket error: %s" % (
+                        result["response"]["message"]))
+                recharge.status = 3
+                recharge.save()
+                return "Recharge for %s: Hotsocket failure" % (
+                       recharge.msisdn)
+
         elif status == 1:
             return "airtime request for %s already in process by another"\
                 " worker" % recharge.msisdn

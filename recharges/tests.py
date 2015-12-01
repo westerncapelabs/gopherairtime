@@ -20,8 +20,7 @@ from recharges.models import Recharge, Account, recharge_post_save
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
                              check_hotsocket_status,
-                             normalize_msisdn, lookup_network_code,
-                             update_recharge_status_hotsocket_ref)
+                             normalize_msisdn, lookup_network_code)
 
 
 class FencedTestCase(TestCase):
@@ -283,22 +282,6 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/recharge")
 
-    def test_update_recharge_status_hotsocket_ref(self):
-        # Setup
-        recharge_id = self.make_recharge()
-        result = {
-            "response": {
-                "hotsocket_ref": 555
-            }
-        }
-        recharge = Recharge.objects.get(id=recharge_id)
-        # Execute
-        hotsocket_ref = update_recharge_status_hotsocket_ref(recharge, result)
-        # Check
-        self.assertEqual(hotsocket_ref, 555)
-        recharge = Recharge.objects.get(id=recharge_id)
-        self.assertEqual(recharge.hotsocket_ref, 555)
-
     def test_normalize_msisdn(self):
         # Setup
         # Execute
@@ -545,6 +528,39 @@ class TestRechargeTasks(TaskTestCase):
                              "http://test-hotsocket/recharge")
             self.assertEqual(recharge.msisdn, '+27711455657')
             self.assertEqual(recharge.network_code, 'VOD')
+
+    @responses.activate
+    def test_hotsocket_get_airtime_fails(self):
+        # Setup
+        with patch("recharges.tasks.check_hotsocket_status.apply_async",
+                   lambda args, countdown: True):
+            self.make_account()
+
+            response_no_hotsocket_ref = {
+                "response": {
+                }
+            }
+            responses.add(
+                responses.POST,
+                "http://test-hotsocket/recharge",
+                json.dumps(response_no_hotsocket_ref),
+                status=200, content_type='application/json')
+
+            recharge_id = self.make_recharge(msisdn="+27 711455657", status=0)
+            recharge = Recharge.objects.get(id=recharge_id)
+            recharge.network_code = "VOD"
+            recharge.msisdn = "+27711455657"
+            recharge.save()
+            # Execute
+            result = hotsocket_get_airtime.apply_async(args=[recharge_id])
+            # Check
+            self.assertEqual(result.get(), "Recharge for +27711455657: "
+                             "Hotsocket failure")
+            recharge = Recharge.objects.get(id=recharge_id)
+            self.assertEqual(recharge.status, 3)
+            self.assertEqual(len(responses.calls), 1)
+            self.assertEqual(responses.calls[0].request.url,
+                             "http://test-hotsocket/recharge")
 
     def test_hotsocket_get_airtime_in_process(self):
         # Setup
