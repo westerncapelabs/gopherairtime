@@ -56,11 +56,10 @@ def normalize_msisdn(msisdn, country_code='27'):
     return msisdn
 
 
-def look_up_mobile_operator(msisdn):
+def lookup_network_code(msisdn):
     """
-    Gets msisdn, slice it to four or three characters and compare mobile
-    operator prefix with the sliced msisdn then returns the correct
-    network_code else false
+    Determines the network operator based on the first digits
+    in the msisdn.
     """
     mtn = ['+27603', '+27604', '+27605',
            '+27630', '+27631', '+27632',
@@ -92,10 +91,44 @@ def look_up_mobile_operator(msisdn):
         return False
 
 
+class ReadyRecharge(Task):
+
+    """
+    Task to set the normalise the msisdn and attempt to set the
+    network operator based on the leading msisdn characters
+    """
+
+    def run(self, recharge_id, **kwargs):
+        l = self.get_logger(**kwargs)
+        recharge = get_recharge(recharge_id)
+
+        # Normalize the msisdn
+        recharge.msisdn = normalize_msisdn(recharge.msisdn, '27')
+        recharge.save()
+
+        # Set the network operator
+        network = lookup_network_code(recharge.msisdn)
+        if not network:
+            # If no network is found, mark the recharge unrecoverable
+            # TODO #44: Add reason for status = 4
+            l.info("Marking recharge as unrecoverable")
+            recharge.status = 4
+            recharge.save()
+            return "Mobile network operator could not be determined for "\
+                   "%s" % recharge.msisdn
+        else:
+            recharge.network_code = network
+            recharge.status = 0
+            recharge.save()
+            return "Recharge ready to process"
+
+ready_recharge = ReadyRecharge()
+
+
 class Hotsocket_Login(Task):
 
     """
-    Task to get the username and password varified then produce a token
+    Task to get the username and password verified then produce a token
     """
     name = "recharges.tasks.hotsocket_login"
 
@@ -206,37 +239,25 @@ class Hotsocket_Get_Airtime(Task):
         status = recharge.status
         if status == 0:
             recharge.status = 1
-            recharge.msisdn = normalize_msisdn(recharge.msisdn, '27')
             recharge.save()
-            mno = look_up_mobile_operator(recharge.msisdn)
-            if mno:
-                recharge.network_code = mno
-                recharge.save()
+            l.info("Making hotsocket recharge request")
+            result = self.request_hotsocket_recharge(recharge_id)
 
-                l.info("Making hotsocket recharge request")
-                result = self.request_hotsocket_recharge(recharge_id)
-
-                if "hotsocket_ref" not in result["response"]:
-                    l.info("Hotsocket error: %s" %
-                           result["response"]["message"])
-                    # todo test this
-                    return "Recharge for %s: Not Queued at Hotsocket " % (
-                           recharge.msisdn, )
-                else:
-                    l.info("Updating recharge object status and hotsocket_ref")
-                    hotsocket_ref = \
-                        update_recharge_status_hotsocket_ref(recharge, result)
-                    # check the status in 5 mins
-                    check_hotsocket_status.apply_async(args=[recharge_id],
-                                                       countdown=5*60)
-                    return "Recharge for %s: Queued at Hotsocket "\
-                        "#%s" % (recharge.msisdn, hotsocket_ref)
+            if "hotsocket_ref" not in result["response"]:
+                l.info("Hotsocket error: %s" %
+                       result["response"]["message"])
+                # todo test this
+                return "Recharge for %s: Not Queued at Hotsocket " % (
+                       recharge.msisdn)
             else:
-                l.info("Marking recharge as unrecoverable")
-                recharge.status = 4
-                recharge.save()
-                return "Mobile network operator could not be determined for "\
-                    "%s" % recharge.msisdn
+                l.info("Updating recharge object status and hotsocket_ref")
+                hotsocket_ref = \
+                    update_recharge_status_hotsocket_ref(recharge, result)
+                # check the status in 5 mins
+                check_hotsocket_status.apply_async(args=[recharge_id],
+                                                   countdown=5*60)
+                return "Recharge for %s: Queued at Hotsocket "\
+                    "#%s" % (recharge.msisdn, hotsocket_ref)
         elif status == 1:
             return "airtime request for %s already in process by another"\
                 " worker" % recharge.msisdn
@@ -246,7 +267,6 @@ class Hotsocket_Get_Airtime(Task):
             return "airtime request for %s failed" % recharge.msisdn
         elif status == 4:
             return "airtime request for %s is unrecoverable" % recharge.msisdn
-
 
 hotsocket_get_airtime = Hotsocket_Get_Airtime()
 

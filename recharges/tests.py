@@ -4,6 +4,7 @@ import pytest
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.db.models.signals import post_save
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
@@ -15,33 +16,64 @@ except ImportError:
     from mock import patch
 
 
-from recharges.models import Recharge, Account
+from recharges.models import Recharge, Account, recharge_post_save
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
                              check_hotsocket_status,
-                             normalize_msisdn, look_up_mobile_operator,
+                             normalize_msisdn, lookup_network_code,
                              update_recharge_status_hotsocket_ref)
 
 
-class APITestCase(TestCase):
+class FencedTestCase(TestCase):
+
+    """ TestCase with post_save_hooks removed
+    """
+
+    def _replace_post_save_hooks(self):
+        has_listeners = lambda: post_save.has_listeners(Recharge)
+        assert has_listeners(), (
+            "Recharge model has no post_save listeners. Make sure"
+            " helpers cleaned up properly in earlier tests.")
+        post_save.disconnect(recharge_post_save, sender=Recharge)
+        assert not has_listeners(), (
+            "Recharge model still has post_save listeners. Make sure"
+            " helpers cleaned up properly in earlier tests.")
+
+    def _restore_post_save_hooks(self):
+        has_listeners = lambda: post_save.has_listeners(Recharge)
+        assert not has_listeners(), (
+            "Recharge model still has post_save listeners. Make sure"
+            " helpers removed them properly in earlier tests.")
+        post_save.connect(recharge_post_save, sender=Recharge)
 
     def setUp(self):
+        super(FencedTestCase, self).setUp()
+        self._replace_post_save_hooks()
+
+    def tearDown(self):
+        self._restore_post_save_hooks()
+
+
+class APITestCase(FencedTestCase):
+
+    def setUp(self):
+        super(APITestCase, self).setUp()
         self.client = APIClient()
 
 
-class TaskTestCase(TestCase):
+class TaskTestCase(FencedTestCase):
 
     def make_account(self, token='1234'):
         account = Account.objects.create(token=token)
         return account.id
 
-    def make_recharge(self, amount=100.00, msisdn="+27820003453", status=0):
-        airtime = Recharge.objects.create(
+    def make_recharge(self, amount=100.00, msisdn="+27820003453", status=None):
+        recharge = Recharge.objects.create(
             amount=amount, msisdn=msisdn, status=status)
-        return airtime.id
+        return recharge.id
 
     def setUp(self):
-        pass
+        super(TaskTestCase, self).setUp()
 
 
 class AuthenticatedAPITestCase(APITestCase):
@@ -85,7 +117,7 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
         d = Recharge.objects.last()
         self.assertEqual(d.amount, 10.0)
         self.assertEqual(d.msisdn, "084 123 4023")
-        self.assertEqual(d.status, 0)
+        self.assertEqual(d.status, None)
         self.assertEqual(d.hotsocket_ref, 0)
 
     def test_create_recharge_bad_model_data(self):
@@ -101,6 +133,37 @@ class TestRechargeAPI(AuthenticatedAPITestCase):
 
         d = Recharge.objects.all().count()
         self.assertEqual(d, 0)
+
+
+class TestPostSaveHooks(TaskTestCase):
+
+    def test_make_recharge_readies_data(self):
+        # Setup
+        # restore post_save hook for this test
+        post_save.connect(recharge_post_save, sender=Recharge)
+        recharge_id = self.make_recharge(msisdn="0724455545")
+        # Execute
+        recharge = Recharge.objects.get(id=recharge_id)
+        # Check
+        self.assertEqual(recharge.msisdn, "+27724455545")
+        self.assertEqual(recharge.status, 0)
+        # Teardown
+        # disconnect post_save hook again
+        post_save.disconnect(recharge_post_save, sender=Recharge)
+
+    def test_make_recharge_readies_data_bad_mno(self):
+        # Setup
+        # restore post_save hook for this test
+        post_save.connect(recharge_post_save, sender=Recharge)
+        recharge_id = self.make_recharge(msisdn="272134567890")
+        # Execute
+        recharge = Recharge.objects.get(id=recharge_id)
+        # Check
+        self.assertEqual(recharge.msisdn, "+272134567890")
+        self.assertEqual(recharge.status, 4)
+        # Teardown
+        # disconnect post_save hook again
+        post_save.disconnect(recharge_post_save, sender=Recharge)
 
 
 class TestRechargeFunctions(TaskTestCase):
@@ -121,6 +184,15 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(token, '5555')
 
+    def test_make_recharge(self):
+        # Setup
+        recharge_id = self.make_recharge()
+        # Execute
+        recharge = Recharge.objects.get(id=recharge_id)
+        # Check
+        self.assertEqual(recharge.status, None)
+        self.assertEqual(recharge.network_code, None)
+
     def test_get_recharge(self):
         # Setup
         recharge_id = self.make_recharge()
@@ -129,7 +201,7 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(recharge.amount, 100)
         self.assertEqual(recharge.msisdn, '+27820003453')
-        self.assertEqual(recharge.status, 0)
+        self.assertEqual(recharge.status, None)
         self.assertEqual(recharge.hotsocket_ref, 0)
 
     def test_prep_hotsocket_data(self):
@@ -149,7 +221,6 @@ class TestRechargeFunctions(TaskTestCase):
         self.assertEqual(hotsocket_data["denomination"], 10000)
         self.assertEqual(hotsocket_data["product_code"], 'AIRTIME')
         self.assertEqual(hotsocket_data["network_code"], 'VOD')
-
         self.assertEqual(hotsocket_data["reference"], recharge_id + 10000)
 
     def test_prep_login_data(self):
@@ -260,41 +331,41 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(result, "+27724455545")
 
-    def test_look_up_mobile_operator(self):
+    def lookup_network_code(self):
         msisdn_cellc = '+27844525677'
-        cellc = look_up_mobile_operator(msisdn_cellc)
+        cellc = lookup_network_code(msisdn_cellc)
         self.assertEqual(cellc, "CELLC")
 
         msisdn_cellc = '+27611000321'
-        cellc = look_up_mobile_operator(msisdn_cellc)
+        cellc = lookup_network_code(msisdn_cellc)
         self.assertEqual(cellc, "CELLC")
 
         msisdn_mtn = '+278300000001'
-        mtn = look_up_mobile_operator(msisdn_mtn)
+        mtn = lookup_network_code(msisdn_mtn)
         self.assertEqual(mtn, "MTN")
 
         msisdn_mtn = '+277180000001'
-        mtn = look_up_mobile_operator(msisdn_mtn)
+        mtn = lookup_network_code(msisdn_mtn)
         self.assertEqual(mtn, "MTN")
 
         msisdn_telkom = '+278110000001'
-        telkom = look_up_mobile_operator(msisdn_telkom)
+        telkom = lookup_network_code(msisdn_telkom)
         self.assertEqual(telkom, "TELKOM")
 
         msisdn_telkom = '+278140000001'
-        telkom = look_up_mobile_operator(msisdn_telkom)
+        telkom = lookup_network_code(msisdn_telkom)
         self.assertEqual(telkom, "TELKOM")
 
         msisdn_vodacom = '+27761000001'
-        vodacom = look_up_mobile_operator(msisdn_vodacom)
+        vodacom = lookup_network_code(msisdn_vodacom)
         self.assertEqual(vodacom, "VOD")
 
         msisdn_vodacom = '+27712000001'
-        vodacom = look_up_mobile_operator(msisdn_vodacom)
+        vodacom = lookup_network_code(msisdn_vodacom)
         self.assertEqual(vodacom, "VOD")
 
         msisdn_unknown = '+272134567890'
-        unknown = look_up_mobile_operator(msisdn_unknown)
+        unknown = lookup_network_code(msisdn_unknown)
         self.assertEqual(unknown, False)
 
     def test_prep_hotsocket_status_dict(self):
@@ -392,10 +463,16 @@ class TestRechargeTasks(TaskTestCase):
         with patch("recharges.tasks.check_hotsocket_status.apply_async",
                    lambda args, countdown: True):
             self.make_account()
-            r1 = self.make_recharge()
-            r2 = self.make_recharge(status=1)
-            r3 = self.make_recharge(status=2)
-            r4 = self.make_recharge()
+            r1_id = self.make_recharge(status=0)
+            r2_id = self.make_recharge(status=1)
+            r3_id = self.make_recharge(status=2)
+            r4_id = self.make_recharge(status=0)
+
+            recharge_ids = [r1_id, r2_id, r3_id, r4_id]
+            for recharge_id in recharge_ids:
+                recharge = Recharge.objects.get(id=recharge_id)
+                recharge.network_code = "VOD"
+                recharge.save()
 
             expected_response_good = {
                 "response": {
@@ -416,10 +493,10 @@ class TestRechargeTasks(TaskTestCase):
             result = hotsocket_process_queue.apply_async(args=[])
             # Check
             self.assertEqual(result.get(), "2 requests queued to Hotsocket")
-            r1 = Recharge.objects.get(id=r1)
-            r2 = Recharge.objects.get(id=r2)
-            r3 = Recharge.objects.get(id=r3)
-            r4 = Recharge.objects.get(id=r4)
+            r1 = Recharge.objects.get(id=r1_id)
+            r2 = Recharge.objects.get(id=r2_id)
+            r3 = Recharge.objects.get(id=r3_id)
+            r4 = Recharge.objects.get(id=r4_id)
             self.assertEqual(r1.status, 1)
             self.assertEqual(r2.status, 1)
             self.assertEqual(r3.status, 2)
@@ -450,6 +527,10 @@ class TestRechargeTasks(TaskTestCase):
                 status=200, content_type='application/json')
 
             recharge_id = self.make_recharge(msisdn="+27 711455657", status=0)
+            recharge = Recharge.objects.get(id=recharge_id)
+            recharge.network_code = "VOD"
+            recharge.msisdn = "+27711455657"
+            recharge.save()
             # Execute
             result = hotsocket_get_airtime.apply_async(args=[recharge_id])
             # Check
@@ -464,20 +545,6 @@ class TestRechargeTasks(TaskTestCase):
                              "http://test-hotsocket/recharge")
             self.assertEqual(recharge.msisdn, '+27711455657')
             self.assertEqual(recharge.network_code, 'VOD')
-
-    def test_hotsocket_get_airtime_bad_mno(self):
-        # Setup
-        self.make_account()
-        recharge_id = self.make_recharge(msisdn="0951112222", status=0)
-        # Execute
-        result = hotsocket_get_airtime.apply_async(args=[recharge_id])
-        # Check
-        self.assertEqual(result.get(),
-                         "Mobile network operator could not be determined for "
-                         "+27951112222")
-        recharge = Recharge.objects.get(id=recharge_id)
-        self.assertEqual(recharge.msisdn, '+27951112222')
-        self.assertEqual(recharge.status, 4)
 
     def test_hotsocket_get_airtime_in_process(self):
         # Setup
