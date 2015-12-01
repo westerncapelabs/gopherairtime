@@ -56,7 +56,7 @@ def normalize_msisdn(msisdn, country_code='27'):
     return msisdn
 
 
-def slice_network_operator(msisdn):
+def lookup_network_code(msisdn):
     """
     Determines the network operator based on the first digits
     in the msisdn.
@@ -107,11 +107,10 @@ class ReadyRecharge(Task):
         recharge.save()
 
         # Set the network operator
-        network = slice_network_operator(recharge.msisdn)
+        network = lookup_network_code(recharge.msisdn)
         if not network:
             # If no network is found, mark the recharge unrecoverable
-            # gsvr: Perhaps we should rather use a different status here
-            # that marks it as 'unknown' and attempts multiple mno recharges?
+            # TODO #44: Add reason for status = 4
             l.info("Marking recharge as unrecoverable")
             recharge.status = 4
             recharge.save()
@@ -249,7 +248,7 @@ class Hotsocket_Get_Airtime(Task):
                        result["response"]["message"])
                 # todo test this
                 return "Recharge for %s: Not Queued at Hotsocket " % (
-                       recharge.msisdn, )
+                       recharge.msisdn)
             else:
                 l.info("Updating recharge object status and hotsocket_ref")
                 hotsocket_ref = \

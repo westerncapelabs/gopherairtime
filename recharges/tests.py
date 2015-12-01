@@ -20,7 +20,7 @@ from recharges.models import Recharge, Account, recharge_post_save
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
                              check_hotsocket_status,
-                             normalize_msisdn, slice_network_operator,
+                             normalize_msisdn, lookup_network_code,
                              update_recharge_status_hotsocket_ref)
 
 
@@ -331,41 +331,41 @@ class TestRechargeFunctions(TaskTestCase):
         # Check
         self.assertEqual(result, "+27724455545")
 
-    def slice_network_operator(self):
+    def lookup_network_code(self):
         msisdn_cellc = '+27844525677'
-        cellc = slice_network_operator(msisdn_cellc)
+        cellc = lookup_network_code(msisdn_cellc)
         self.assertEqual(cellc, "CELLC")
 
         msisdn_cellc = '+27611000321'
-        cellc = slice_network_operator(msisdn_cellc)
+        cellc = lookup_network_code(msisdn_cellc)
         self.assertEqual(cellc, "CELLC")
 
         msisdn_mtn = '+278300000001'
-        mtn = slice_network_operator(msisdn_mtn)
+        mtn = lookup_network_code(msisdn_mtn)
         self.assertEqual(mtn, "MTN")
 
         msisdn_mtn = '+277180000001'
-        mtn = slice_network_operator(msisdn_mtn)
+        mtn = lookup_network_code(msisdn_mtn)
         self.assertEqual(mtn, "MTN")
 
         msisdn_telkom = '+278110000001'
-        telkom = slice_network_operator(msisdn_telkom)
+        telkom = lookup_network_code(msisdn_telkom)
         self.assertEqual(telkom, "TELKOM")
 
         msisdn_telkom = '+278140000001'
-        telkom = slice_network_operator(msisdn_telkom)
+        telkom = lookup_network_code(msisdn_telkom)
         self.assertEqual(telkom, "TELKOM")
 
         msisdn_vodacom = '+27761000001'
-        vodacom = slice_network_operator(msisdn_vodacom)
+        vodacom = lookup_network_code(msisdn_vodacom)
         self.assertEqual(vodacom, "VOD")
 
         msisdn_vodacom = '+27712000001'
-        vodacom = slice_network_operator(msisdn_vodacom)
+        vodacom = lookup_network_code(msisdn_vodacom)
         self.assertEqual(vodacom, "VOD")
 
         msisdn_unknown = '+272134567890'
-        unknown = slice_network_operator(msisdn_unknown)
+        unknown = lookup_network_code(msisdn_unknown)
         self.assertEqual(unknown, False)
 
     def test_prep_hotsocket_status_dict(self):
