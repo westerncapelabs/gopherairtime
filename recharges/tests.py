@@ -426,7 +426,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = hotsocket_login.delay()
+        result = hotsocket_login.apply_async(args=[])
         # Check
         self.assertEqual(result.get(), True)
 
@@ -450,7 +450,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = hotsocket_login.delay()
+        result = hotsocket_login.apply_async(args=[])
         # Check
         self.assertEqual(result.get(), False)
 
@@ -490,7 +490,7 @@ class TestRechargeTasks(TaskTestCase):
                 status=200, content_type='application/json')
 
             # Execute
-            result = hotsocket_process_queue.delay()
+            result = hotsocket_process_queue.apply_async(args=[])
             # Check
             self.assertEqual(result.get(), "2 requests queued to Hotsocket")
             r1 = Recharge.objects.get(id=r1_id)
@@ -532,7 +532,7 @@ class TestRechargeTasks(TaskTestCase):
             recharge.msisdn = "+27711455657"
             recharge.save()
             # Execute
-            result = hotsocket_get_airtime.delay(recharge_id)
+            result = hotsocket_get_airtime.apply_async(args=[recharge_id])
             # Check
             self.assertEqual(result.get(), "Recharge for +27711455657: "
                              "Queued at Hotsocket #4487")
@@ -551,7 +551,7 @@ class TestRechargeTasks(TaskTestCase):
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=1)
         # Execute
-        result = hotsocket_get_airtime.delay(recharge_id)
+        result = hotsocket_get_airtime.apply_async(args=[recharge_id])
         # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 already in process"
@@ -562,7 +562,7 @@ class TestRechargeTasks(TaskTestCase):
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=2)
         # Execute
-        result = hotsocket_get_airtime.delay(recharge_id)
+        result = hotsocket_get_airtime.apply_async(args=[recharge_id])
         # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is successful")
@@ -572,7 +572,7 @@ class TestRechargeTasks(TaskTestCase):
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=3)
         # Execute
-        result = hotsocket_get_airtime.delay(recharge_id)
+        result = hotsocket_get_airtime.apply_async(args=[recharge_id])
         # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 failed")
@@ -582,7 +582,7 @@ class TestRechargeTasks(TaskTestCase):
         self.make_account()
         recharge_id = self.make_recharge(msisdn="+277244555", status=4)
         # Execute
-        result = hotsocket_get_airtime.delay(recharge_id)
+        result = hotsocket_get_airtime.apply_async(args=[recharge_id])
         # Check
         self.assertEqual(result.get(),
                          "airtime request for +277244555 is unrecoverable")
@@ -610,7 +610,7 @@ class TestRechargeTasks(TaskTestCase):
 
         # Execute and catch loop
         with pytest.raises(exceptions.MaxRetriesExceededError) as excinfo:
-            check_hotsocket_status.delay(recharge_id)
+            check_hotsocket_status.apply_async(args=[recharge_id])
         assert "Can't retry recharges.tasks.Check_Hotsocket_Status" in \
             str(excinfo.value)
 
@@ -643,7 +643,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = check_hotsocket_status.delay(recharge_id)
+        result = check_hotsocket_status.apply_async(args=[recharge_id])
 
         # Check
         self.assertEqual(result.get(),
@@ -676,7 +676,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = check_hotsocket_status.delay(recharge_id)
+        result = check_hotsocket_status.apply_async(args=[recharge_id])
 
         # Check
         self.assertEqual(result.get(),
@@ -710,7 +710,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = check_hotsocket_status.delay(recharge_id)
+        result = check_hotsocket_status.apply_async(args=[recharge_id])
 
         # Check
         self.assertEqual(result.get(),

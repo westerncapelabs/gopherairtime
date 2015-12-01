@@ -185,7 +185,7 @@ class Hotsocket_Process_Queue(Task):
         l.info("Looking up the unprocessed requests")
         queued = Recharge.objects.filter(status=0)
         for recharge in queued:
-            hotsocket_get_airtime.delay(recharge.id)
+            hotsocket_get_airtime.apply_async(args=[recharge.id])
         return "%s requests queued to Hotsocket" % queued.count()
 
 hotsocket_process_queue = Hotsocket_Process_Queue()
