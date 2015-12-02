@@ -260,7 +260,7 @@ class HotsocketCheckStatus(Task):
     """
     name = "recharges.tasks.hotsocket_check_status"
 
-    def prep_hotsocket_status_dict(self, recharge_id):
+    def prep_hotsocket_status_dict(self, recharge):
         """
         Constructs the dict needed to make a hotsocket recharge status request
         """
@@ -268,15 +268,15 @@ class HotsocketCheckStatus(Task):
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
             'token': get_token(),
-            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE),
+            'reference': recharge.hotsocket_ref,
         }
         return hotsocket_data
 
-    def request_hotsocket_status(self, recharge_id):
+    def request_hotsocket_status(self, recharge):
         """
         Makes the POST request to the Hotsocket API
         """
-        hotsocket_data = self.prep_hotsocket_status_dict(recharge_id)
+        hotsocket_data = self.prep_hotsocket_status_dict(recharge)
         recharge_status_post = requests.post("%s/status" %
                                              settings.HOTSOCKET_API_ENDPOINT,
                                              data=hotsocket_data)
@@ -285,13 +285,13 @@ class HotsocketCheckStatus(Task):
     def run(self, recharge_id, **kwargs):
         l = self.get_logger(**kwargs)
         l.info("Looking up Hotsocket status")
-        hs_status = self.request_hotsocket_status(recharge_id)
+        recharge = Recharge.objects.get(id=recharge_id)
+        hs_status = self.request_hotsocket_status(recharge)
         hs_status_code = hs_status["response"]["status"]
 
         if hs_status_code == "0000":
             # recharge status lookup successful
             hs_recharge_status_cd = hs_status["response"]["recharge_status_cd"]
-            recharge = Recharge.objects.get(id=recharge_id)
             if hs_recharge_status_cd == 3:
                 # Success
                 recharge.status = 2
