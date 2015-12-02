@@ -19,7 +19,7 @@ except ImportError:
 from recharges.models import Recharge, Account, recharge_post_save
 from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
                              hotsocket_get_airtime, get_token, get_recharge,
-                             check_hotsocket_status,
+                             hotsocket_check_status,
                              normalize_msisdn, lookup_network_code)
 
 
@@ -354,7 +354,7 @@ class TestRechargeFunctions(TaskTestCase):
     def test_prep_hotsocket_status_dict(self):
         self.make_account()
 
-        result = check_hotsocket_status.\
+        result = hotsocket_check_status.\
             prep_hotsocket_status_dict(recharge_id=1003)
 
         self.assertEqual(result['reference'], 11003)
@@ -381,7 +381,7 @@ class TestRechargeFunctions(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
         # Execute
-        result = check_hotsocket_status.request_hotsocket_status(recharge_id)
+        result = hotsocket_check_status.request_hotsocket_status(recharge_id)
         # Check
         self.assertEqual(result["response"]["status"], "0000")
         self.assertEqual(len(responses.calls), 1)
@@ -443,7 +443,7 @@ class TestRechargeTasks(TaskTestCase):
     @responses.activate
     def test_hotsocket_process_queue(self):
         # Setup
-        with patch("recharges.tasks.check_hotsocket_status.apply_async",
+        with patch("recharges.tasks.hotsocket_check_status.apply_async",
                    lambda args, countdown: True):
             self.make_account()
             r1_id = self.make_recharge(status=0)
@@ -490,7 +490,7 @@ class TestRechargeTasks(TaskTestCase):
     @responses.activate
     def test_hotsocket_get_airtime_good(self):
         # Setup
-        with patch("recharges.tasks.check_hotsocket_status.apply_async",
+        with patch("recharges.tasks.hotsocket_check_status.apply_async",
                    lambda args, countdown: True):
             self.make_account()
 
@@ -532,7 +532,7 @@ class TestRechargeTasks(TaskTestCase):
     @responses.activate
     def test_hotsocket_get_airtime_fails(self):
         # Setup
-        with patch("recharges.tasks.check_hotsocket_status.apply_async",
+        with patch("recharges.tasks.hotsocket_check_status.apply_async",
                    lambda args, countdown: True):
             self.make_account()
 
@@ -626,8 +626,8 @@ class TestRechargeTasks(TaskTestCase):
 
         # Execute and catch loop
         with pytest.raises(exceptions.MaxRetriesExceededError) as excinfo:
-            check_hotsocket_status.apply_async(args=[recharge_id])
-        assert "Can't retry recharges.tasks.Check_Hotsocket_Status" in \
+            hotsocket_check_status.apply_async(args=[recharge_id])
+        assert "Can't retry recharges.tasks.hotsocket_check_status" in \
             str(excinfo.value)
 
         # Check
@@ -659,7 +659,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = check_hotsocket_status.apply_async(args=[recharge_id])
+        result = hotsocket_check_status.apply_async(args=[recharge_id])
 
         # Check
         self.assertEqual(result.get(),
@@ -692,7 +692,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = check_hotsocket_status.apply_async(args=[recharge_id])
+        result = hotsocket_check_status.apply_async(args=[recharge_id])
 
         # Check
         self.assertEqual(result.get(),
@@ -726,7 +726,7 @@ class TestRechargeTasks(TaskTestCase):
             status=200, content_type='application/json')
 
         # Execute
-        result = check_hotsocket_status.apply_async(args=[recharge_id])
+        result = hotsocket_check_status.apply_async(args=[recharge_id])
 
         # Check
         self.assertEqual(result.get(),

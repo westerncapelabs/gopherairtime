@@ -112,7 +112,7 @@ class ReadyRecharge(Task):
 ready_recharge = ReadyRecharge()
 
 
-class Hotsocket_Login(Task):
+class HotsocketLogin(Task):
 
     """
     Task to get the username and password verified then produce a token
@@ -152,10 +152,10 @@ class Hotsocket_Login(Task):
             l.error("Failed login to hotsocket")
             return False
 
-hotsocket_login = Hotsocket_Login()
+hotsocket_login = HotsocketLogin()
 
 
-class Hotsocket_Process_Queue(Task):
+class HotsocketProcessQueue(Task):
 
     """
     Task to get the get all unprocessed recharges and create tasks to
@@ -174,10 +174,10 @@ class Hotsocket_Process_Queue(Task):
             hotsocket_get_airtime.apply_async(args=[recharge.id])
         return "%s requests queued to Hotsocket" % queued.count()
 
-hotsocket_process_queue = Hotsocket_Process_Queue()
+hotsocket_process_queue = HotsocketProcessQueue()
 
 
-class Hotsocket_Get_Airtime(Task):
+class HotsocketGetAirtime(Task):
 
     """
     Task to make hotsocket post request to load airtime, saves hotsocket ref
@@ -233,7 +233,7 @@ class Hotsocket_Get_Airtime(Task):
             if "hotsocket_ref" in result["response"]:
                 recharge.hotsocket_ref = result["response"]["hotsocket_ref"]
                 recharge.save()
-                check_hotsocket_status.apply_async(args=[recharge_id],
+                hotsocket_check_status.apply_async(args=[recharge_id],
                                                    countdown=5*60)
                 return "Recharge for %s: Queued at Hotsocket "\
                     "#%s" % (recharge.msisdn, recharge.hotsocket_ref)
@@ -256,16 +256,16 @@ class Hotsocket_Get_Airtime(Task):
         elif status == 4:
             return "airtime request for %s is unrecoverable" % recharge.msisdn
 
-hotsocket_get_airtime = Hotsocket_Get_Airtime()
+hotsocket_get_airtime = HotsocketGetAirtime()
 
 
-class Check_Hotsocket_Status(Task):
+class HotsocketCheckStatus(Task):
 
     """
-    Task to check hotsocket recharge request and sets the recharge model
+    Task to check hotsocket recharge request and set the recharge model
     status to successful if the airtime has been loaded to the user's phone.
     """
-    name = "recharges.tasks.Check_Hotsocket_Status"
+    name = "recharges.tasks.hotsocket_check_status"
 
     def prep_hotsocket_status_dict(self, recharge_id):
         """
@@ -355,4 +355,4 @@ class Check_Hotsocket_Status(Task):
 
         return "recharge is successful"
 
-check_hotsocket_status = Check_Hotsocket_Status()
+hotsocket_check_status = HotsocketCheckStatus()
