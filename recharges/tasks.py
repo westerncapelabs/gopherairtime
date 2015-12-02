@@ -186,7 +186,6 @@ class HotsocketGetAirtime(Task):
         msisdn needs no + for HS
         denomination needs to be in cents for HS
         """
-        # recharge = Recharge.objects.get(id=recharge_id)
         recharge.reference = random.randint(1, 2147483647)  # max integer val
         recharge.save()
         hotsocket_data = {
