@@ -17,10 +17,10 @@ except ImportError:
 
 
 from recharges.models import Recharge, Account, recharge_post_save
-from recharges.tasks import (
-    get_token, normalize_msisdn, lookup_network_code, random_string,
-    hotsocket_login, hotsocket_process_queue, hotsocket_get_airtime,
-    hotsocket_check_status)
+from recharges.tasks import (hotsocket_login, hotsocket_process_queue,
+                             hotsocket_get_airtime, get_token,
+                             hotsocket_check_status,
+                             normalize_msisdn, lookup_network_code)
 
 
 class FencedTestCase(TestCase):
@@ -268,16 +268,6 @@ class TestTaskUtils(TaskTestCase):
         msisdn_unknown = '+272134567890'
         unknown = lookup_network_code(msisdn_unknown)
         self.assertEqual(unknown, False)
-
-    def test_random_string(self):
-        # Setup
-        # Execute
-        random_string_1 = random_string(size=10)
-        random_string_2 = random_string(size=10)
-        # Check
-        self.assertEqual(len(random_string_1), 10)
-        self.assertEqual(len(random_string_2), 10)
-        self.assertNotEqual(random_string_1, random_string_2)
 
 
 class TestHotsocketLogin(TaskTestCase):
