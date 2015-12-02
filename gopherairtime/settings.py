@@ -152,10 +152,19 @@ CELERY_IMPORTS = (
 
 CELERY_CREATE_MISSING_QUEUES = True
 CELERY_ROUTES = {
+    'recharges.tasks.ready_recharge': {
+        'queue': 'gopherairtime',
+    },
     'recharges.tasks.hotsocket_login': {
         'queue': 'gopherairtime',
     },
     'recharges.tasks.hotsocket_process_queue': {
+        'queue': 'gopherairtime',
+    },
+    'recharges.tasks.hotsocket_get_airtime': {
+        'queue': 'gopherairtime',
+    },
+    'recharges.tasks.hotsocket_check_status': {
         'queue': 'gopherairtime',
     },
 }
