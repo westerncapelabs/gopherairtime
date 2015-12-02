@@ -1,5 +1,5 @@
 import requests
-
+import random
 from django.conf import settings
 from celery.task import Task
 from celery.utils.log import get_task_logger
@@ -179,14 +179,16 @@ class HotsocketGetAirtime(Task):
     """
     name = "recharges.tasks.hotsocket_get_airtime"
 
-    def prep_hotsocket_data(self, recharge_id):
+    def prep_hotsocket_data(self, recharge):
 
         """
         Constructs the dict needed to make a hotsocket airtime request
         msisdn needs no + for HS
         denomination needs to be in cents for HS
         """
-        recharge = Recharge.objects.get(id=recharge_id)
+        # recharge = Recharge.objects.get(id=recharge_id)
+        recharge.reference = random.randint(1, 2147483647)  # max integer val
+        recharge.save()
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'password': settings.HOTSOCKET_API_PASSWORD,
@@ -196,15 +198,15 @@ class HotsocketGetAirtime(Task):
             'product_code': recharge.product_code,
             'network_code': recharge.network_code,
             'denomination': int(recharge.amount*100),
-            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE)
+            'reference': recharge.reference
         }
         return hotsocket_data
 
-    def request_hotsocket_recharge(self, recharge_id):
+    def request_hotsocket_recharge(self, recharge):
         """
         Makes hotsocket airtime request
         """
-        hotsocket_data = self.prep_hotsocket_data(recharge_id)
+        hotsocket_data = self.prep_hotsocket_data(recharge)
         recharge_post = requests.post("%s/recharge" %
                                       settings.HOTSOCKET_API_ENDPOINT,
                                       data=hotsocket_data)
@@ -223,7 +225,7 @@ class HotsocketGetAirtime(Task):
             recharge.save()
 
             l.info("Making hotsocket recharge request")
-            result = self.request_hotsocket_recharge(recharge_id)
+            result = self.request_hotsocket_recharge(recharge)
             if "hotsocket_ref" in result["response"]:
                 recharge.hotsocket_ref = result["response"]["hotsocket_ref"]
                 recharge.save()
@@ -264,11 +266,12 @@ class HotsocketCheckStatus(Task):
         """
         Constructs the dict needed to make a hotsocket recharge status request
         """
+        recharge = Recharge.objects.get(id=recharge_id)
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
             'token': get_token(),
-            'reference': recharge_id + int(settings.HOTSOCKET_REFBASE),
+            'reference': recharge.reference,
         }
         return hotsocket_data
 
