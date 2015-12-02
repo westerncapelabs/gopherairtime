@@ -1,4 +1,6 @@
 import requests
+import string
+import random
 
 from django.conf import settings
 from celery.task import Task
@@ -73,6 +75,10 @@ def lookup_network_code(msisdn):
         return "VOD"
     else:
         return False
+
+
+def random_string(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 class ReadyRecharge(Task):
