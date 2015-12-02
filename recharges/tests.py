@@ -457,17 +457,12 @@ class TestHotsocketGetAirtime(TaskTestCase):
                          "http://test-hotsocket/recharge")
 
     def test_prep_hotsocket_status_dict(self):
-        # Setup
         self.make_account()
-        recharge_id = self.make_recharge()
-        recharge = Recharge.objects.get(id=recharge_id)
-        recharge.hotsocket_ref = 1003
-        recharge.save()
-        # Execute
+
         result = hotsocket_check_status.\
-            prep_hotsocket_status_dict(recharge)
-        # Check
-        self.assertEqual(result['reference'], 1003)
+            prep_hotsocket_status_dict(recharge_id=1003)
+
+        self.assertEqual(result['reference'], 11003)
         self.assertEqual(result['token'], '1234')
         self.assertEqual(result['username'], 'Replaceme_username')
 
@@ -476,7 +471,6 @@ class TestHotsocketGetAirtime(TaskTestCase):
         # Setup
         self.make_account()
         recharge_id = self.make_recharge()
-        recharge = Recharge.objects.get(id=recharge_id)
         expected_response_good = {
             "response": {
                 "message": "Status lookup successful.",
@@ -492,7 +486,7 @@ class TestHotsocketGetAirtime(TaskTestCase):
             json.dumps(expected_response_good),
             status=200, content_type='application/json')
         # Execute
-        result = hotsocket_check_status.request_hotsocket_status(recharge)
+        result = hotsocket_check_status.request_hotsocket_status(recharge_id)
         # Check
         self.assertEqual(result["response"]["status"], "0000")
         self.assertEqual(len(responses.calls), 1)
