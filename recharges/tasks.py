@@ -17,21 +17,18 @@ def get_token():
     return account.token
 
 
-def get_recharge(recharge_id):
-    """
-    Returns the recharge object from its id
-    """
-    recharge = Recharge.objects.get(id=recharge_id)
-    return recharge
-
-
 def normalize_msisdn(msisdn, country_code='27'):
     """
-    Gets msisdn and cleans it to the correct format when returned
+    Normalizes msisdn using provided country code.
+    Country code defaults to '27' (South Africa)
+    e.g. '082 111 2222' -> '+27821112222'
     """
+    # Don't touch shortcodes
     if len(msisdn) <= 5:
         return msisdn
+    # Strip everything not a digit or '+'
     msisdn = ''.join([c for c in msisdn if c.isdigit() or c == '+'])
+    # Standardise start of msisdn
     if msisdn.startswith('00'):
         return '+' + country_code + msisdn[2:]
     if msisdn.startswith('0'):
@@ -79,15 +76,15 @@ def lookup_network_code(msisdn):
 
 
 class ReadyRecharge(Task):
-
     """
     Task to set the normalise the msisdn and attempt to set the
     network operator based on the leading msisdn characters
     """
+    name = "recharges.tasks.ready_recharge"
 
     def run(self, recharge_id, **kwargs):
         l = self.get_logger(**kwargs)
-        recharge = get_recharge(recharge_id)
+        recharge = Recharge.objects.get(id=recharge_id)
 
         # Normalize the msisdn
         recharge.msisdn = normalize_msisdn(recharge.msisdn, '27')
@@ -113,7 +110,6 @@ ready_recharge = ReadyRecharge()
 
 
 class HotsocketLogin(Task):
-
     """
     Task to get the username and password verified then produce a token
     """
@@ -156,7 +152,6 @@ hotsocket_login = HotsocketLogin()
 
 
 class HotsocketProcessQueue(Task):
-
     """
     Task to get the get all unprocessed recharges and create tasks to
     submit them to hotsocket
@@ -178,7 +173,6 @@ hotsocket_process_queue = HotsocketProcessQueue()
 
 
 class HotsocketGetAirtime(Task):
-
     """
     Task to make hotsocket post request to load airtime, saves hotsocket ref
     to the recharge model and update status
@@ -192,7 +186,7 @@ class HotsocketGetAirtime(Task):
         msisdn needs no + for HS
         denomination needs to be in cents for HS
         """
-        recharge = get_recharge(recharge_id)
+        recharge = Recharge.objects.get(id=recharge_id)
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'password': settings.HOTSOCKET_API_PASSWORD,
@@ -221,7 +215,7 @@ class HotsocketGetAirtime(Task):
         Returns the recharge model entry
         """
         l = self.get_logger(**kwargs)
-        recharge = get_recharge(recharge_id)
+        recharge = Recharge.objects.get(id=recharge_id)
         status = recharge.status
         if status == 0:
             # Set status to In Process
@@ -260,7 +254,6 @@ hotsocket_get_airtime = HotsocketGetAirtime()
 
 
 class HotsocketCheckStatus(Task):
-
     """
     Task to check hotsocket recharge request and set the recharge model
     status to successful if the airtime has been loaded to the user's phone.
@@ -271,7 +264,6 @@ class HotsocketCheckStatus(Task):
         """
         Constructs the dict needed to make a hotsocket recharge status request
         """
-
         hotsocket_data = {
             'username': settings.HOTSOCKET_API_USERNAME,
             'as_json': True,
@@ -281,6 +273,9 @@ class HotsocketCheckStatus(Task):
         return hotsocket_data
 
     def request_hotsocket_status(self, recharge_id):
+        """
+        Makes the POST request to the Hotsocket API
+        """
         hotsocket_data = self.prep_hotsocket_status_dict(recharge_id)
         recharge_status_post = requests.post("%s/status" %
                                              settings.HOTSOCKET_API_ENDPOINT,
@@ -296,7 +291,7 @@ class HotsocketCheckStatus(Task):
         if hs_status_code == "0000":
             # recharge status lookup successful
             hs_recharge_status_cd = hs_status["response"]["recharge_status_cd"]
-            recharge = get_recharge(recharge_id)
+            recharge = Recharge.objects.get(id=recharge_id)
             if hs_recharge_status_cd == 3:
                 # Success
                 recharge.status = 2
