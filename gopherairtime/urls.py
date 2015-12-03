@@ -1,5 +1,9 @@
+import os
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
+
+admin.site.site_header = os.environ.get('GOPHERAIRTIME_TITLE',
+                                        'Gopher Airtime')
 
 
 urlpatterns = patterns(
