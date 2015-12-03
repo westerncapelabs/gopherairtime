@@ -723,6 +723,7 @@ class TestHotsocketCheckStatus(TaskTestCase):
                          "Recharge pre-submission for +27820003453 errored")
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 4)
+        self.assertEqual(recharge.status_message, "Pre-submission error")
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/status")
 
