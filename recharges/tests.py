@@ -176,6 +176,7 @@ class TestPostSaveHooks(TaskTestCase):
         # Check
         self.assertEqual(recharge.msisdn, "+272134567890")
         self.assertEqual(recharge.status, 4)
+        self.assertEqual(recharge.status_message, "Network lookup failed")
         # Teardown
         # disconnect post_save hook again
         post_save.disconnect(recharge_post_save, sender=Recharge)
@@ -502,7 +503,7 @@ class TestHotsocketGetAirtime(TaskTestCase):
             self.assertEqual(recharge.network_code, 'VOD')
 
     @responses.activate
-    def test_hotsocket_get_airtime_fails(self):
+    def test_hotsocket_get_airtime_fails_no_message(self):
         # Setup
         with patch("recharges.tasks.hotsocket_check_status.apply_async",
                    lambda args, countdown: True):
@@ -530,6 +531,44 @@ class TestHotsocketGetAirtime(TaskTestCase):
                              "Hotsocket failure")
             recharge = Recharge.objects.get(id=recharge_id)
             self.assertEqual(recharge.status, 3)
+            self.assertEqual(recharge.status_message,
+                             "Unknown Hotsocket error")
+            self.assertIsNotNone(recharge.reference)
+            self.assertEqual(len(responses.calls), 1)
+            self.assertEqual(responses.calls[0].request.url,
+                             "http://test-hotsocket/recharge")
+
+    @responses.activate
+    def test_hotsocket_get_airtime_fails_with_message(self):
+        # Setup
+        with patch("recharges.tasks.hotsocket_check_status.apply_async",
+                   lambda args, countdown: True):
+            self.make_account()
+
+            response_no_hotsocket_ref = {
+                "response": {
+                    "message": "You muppet :)"
+                }
+            }
+            responses.add(
+                responses.POST,
+                "http://test-hotsocket/recharge",
+                json.dumps(response_no_hotsocket_ref),
+                status=200, content_type='application/json')
+
+            recharge_id = self.make_recharge(msisdn="+27 711455657", status=0)
+            recharge = Recharge.objects.get(id=recharge_id)
+            recharge.network_code = "VOD"
+            recharge.msisdn = "+27711455657"
+            recharge.save()
+            # Execute
+            result = hotsocket_get_airtime.apply_async(args=[recharge_id])
+            # Check
+            self.assertEqual(result.get(), "Recharge for +27711455657: "
+                             "Hotsocket failure")
+            recharge = Recharge.objects.get(id=recharge_id)
+            self.assertEqual(recharge.status, 3)
+            self.assertEqual(recharge.status_message, "You muppet :)")
             self.assertIsNotNone(recharge.reference)
             self.assertEqual(len(responses.calls), 1)
             self.assertEqual(responses.calls[0].request.url,
@@ -692,13 +731,14 @@ class TestHotsocketCheckStatus(TaskTestCase):
         # Setup
         self.make_account()
         recharge_id = self.make_recharge()
+        status_message = "MNO reports invalid MSISDN (not prepaid). "\
+                         "You have not been billed for this."
 
         expected_response = {
             "response": {
                 "status": "0000",
                 "message": "Status lookup successful.",
-                "recharge_status": "MNO reports invalid MSISDN (not prepaid). "
-                                   "You have not been billed for this.",
+                "recharge_status": status_message,
                 "running_balance": 0,
                 "recharge_status_cd": 2,
             }
@@ -719,6 +759,7 @@ class TestHotsocketCheckStatus(TaskTestCase):
                          "been billed for this.")
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 3)
+        self.assertEqual(recharge.status_message, status_message)
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/status")
 
@@ -751,5 +792,6 @@ class TestHotsocketCheckStatus(TaskTestCase):
                          "Recharge for +27820003453 successful")
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 2)
+        self.assertEqual(recharge.status_message, "Recharge successful")
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/status")
