@@ -691,6 +691,7 @@ class TestHotsocketCheckStatus(TaskTestCase):
         self.assertEqual(len(responses.calls), 4)
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 1)
+        self.assertEqual(recharge.status_message, "Successful")
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/status")
 
@@ -704,7 +705,7 @@ class TestHotsocketCheckStatus(TaskTestCase):
             "response": {
                 "status": "0000",
                 "message": "Status lookup successful.",
-                "recharge_status": "Pre-submission error.",
+                "recharge_status": "Pre-submission error",
                 "running_balance": 0,
                 "recharge_status_cd": 1,
             }
@@ -793,6 +794,6 @@ class TestHotsocketCheckStatus(TaskTestCase):
                          "Recharge for +27820003453 successful")
         recharge = Recharge.objects.get(id=recharge_id)
         self.assertEqual(recharge.status, 2)
-        self.assertEqual(recharge.status_message, "Recharge successful")
+        self.assertEqual(recharge.status_message, "Successful")
         self.assertEqual(responses.calls[0].request.url,
                          "http://test-hotsocket/status")

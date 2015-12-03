@@ -300,7 +300,8 @@ class HotsocketCheckStatus(Task):
             if hs_recharge_status_cd == 3:
                 # Success
                 recharge.status = 2
-                recharge.status_message = "Recharge successful"
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 return "Recharge for %s successful" % recharge.msisdn
             elif hs_recharge_status_cd == 2:
@@ -314,13 +315,16 @@ class HotsocketCheckStatus(Task):
             elif hs_recharge_status_cd == 1:
                 # Pre-submission error.
                 recharge.status = 4
-                recharge.status_message = "Pre-submission error"
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 return "Recharge pre-submission for %s errored" % (
                     recharge.msisdn)
             elif hs_recharge_status_cd == 0:
-                # Submitted, not yet succesful.
+                # Submitted, not yet successful.
                 recharge.status = 1
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 # requeue in 5 mins
                 self.retry(args=[recharge_id], countdown=5*60)
