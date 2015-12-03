@@ -12,6 +12,7 @@ class Recharge(models.Model):
     """
     amount = models.DecimalField(max_digits=9, decimal_places=2)
     msisdn = models.CharField(max_length=20)
+    reference = models.IntegerField(null=True, blank=True)
     hotsocket_ref = models.IntegerField(default=0)
     status_choices = (
         (0, 'Unprocessed'),
@@ -20,6 +21,7 @@ class Recharge(models.Model):
         (3, 'Failed'),
         (4, 'Unrecoverable'))
     status = models.IntegerField(choices=status_choices, null=True, blank=True)
+    status_message = models.CharField(max_length=255, null=True, blank=True)
     network_choice = (
         ('VOD', 'Vodacom'),
         ('MTN', 'MTN'),
