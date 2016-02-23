@@ -94,9 +94,9 @@ class ReadyRecharge(Task):
         network = lookup_network_code(recharge.msisdn)
         if not network:
             # If no network is found, mark the recharge unrecoverable
-            # TODO #44: Add reason for status = 4
             l.info("Marking recharge as unrecoverable")
             recharge.status = 4
+            recharge.status_message = "Network lookup failed"
             recharge.save()
             return "Mobile network operator could not be determined for "\
                    "%s" % recharge.msisdn
@@ -236,6 +236,9 @@ class HotsocketGetAirtime(Task):
                 if "message" in result["response"]:
                     l.info("Hotsocket error: %s" % (
                         result["response"]["message"]))
+                    recharge.status_message = result["response"]["message"]
+                else:
+                    recharge.status_message = "Unknown Hotsocket error"
                 recharge.status = 3
                 recharge.save()
                 return "Recharge for %s: Hotsocket failure" % (
@@ -297,23 +300,31 @@ class HotsocketCheckStatus(Task):
             if hs_recharge_status_cd == 3:
                 # Success
                 recharge.status = 2
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 return "Recharge for %s successful" % recharge.msisdn
             elif hs_recharge_status_cd == 2:
                 # Failed
                 recharge.status = 3
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 return "Recharge for %s failed. Reason: %s" % (
                     recharge.msisdn, hs_status["response"]["recharge_status"])
             elif hs_recharge_status_cd == 1:
                 # Pre-submission error.
                 recharge.status = 4
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 return "Recharge pre-submission for %s errored" % (
                     recharge.msisdn)
             elif hs_recharge_status_cd == 0:
-                # Submitted, not yet succesful.
+                # Submitted, not yet successful.
                 recharge.status = 1
+                recharge.status_message = hs_status["response"][
+                    "recharge_status"]
                 recharge.save()
                 # requeue in 5 mins
                 self.retry(args=[recharge_id], countdown=5*60)
