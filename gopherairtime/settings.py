@@ -135,6 +135,7 @@ BROKER_URL = os.environ.get('RABBITMQ_URL', 'redis://localhost:6379/0')
 
 from kombu import Exchange, Queue
 
+CELERY_DEFAULT_RATE_LIMIT = "30/m"
 CELERY_DEFAULT_QUEUE = 'gopherairtime'
 CELERY_QUEUES = (
     Queue('gopherairtime',
