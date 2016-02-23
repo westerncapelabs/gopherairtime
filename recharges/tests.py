@@ -27,7 +27,7 @@ class FencedTestCase(TestCase):
     """TestCase with post_save_hooks removed"""
 
     def _replace_post_save_hooks(self):
-        has_listeners = lambda: post_save.has_listeners(Recharge)
+        has_listeners = lambda: post_save.has_listeners(Recharge)  # flake8: noqa
         assert has_listeners(), (
             "Recharge model has no post_save listeners. Make sure"
             " helpers cleaned up properly in earlier tests.")
@@ -37,7 +37,7 @@ class FencedTestCase(TestCase):
             " helpers cleaned up properly in earlier tests.")
 
     def _restore_post_save_hooks(self):
-        has_listeners = lambda: post_save.has_listeners(Recharge)
+        has_listeners = lambda: post_save.has_listeners(Recharge)  # flake8: noqa
         assert not has_listeners(), (
             "Recharge model still has post_save listeners. Make sure"
             " helpers removed them properly in earlier tests.")
