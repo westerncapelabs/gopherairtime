@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'django_filters',
     # us
     'recharges',
+    'controlinterface',
 
 )
 
@@ -110,7 +111,7 @@ STATIC_URL = '/static/'
 # Sentry configuration
 RAVEN_CONFIG = {
     # DevOps will supply you with this.
-     'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', ""),
+     'dsn': os.environ.get('GOPHERAPI_SENTRY_DSN', None),
 }
 
 # REST Framework conf defaults

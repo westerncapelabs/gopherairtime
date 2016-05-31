@@ -1,0 +1,25 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Control Interface">
+    <meta name="author" content="Western Cape Labs">
+
+    <title>GopherAirtime - Control</title>
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{% static "controlinterface/css/control.css" %}">
+  </head>
+
+
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </body>
+</html>
