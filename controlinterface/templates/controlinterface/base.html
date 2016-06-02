@@ -9,17 +9,28 @@
     <meta name="author" content="Western Cape Labs">
 
     <title>GopherAirtime - Control</title>
-
-    <!-- Custom styles for this template -->
+    <script src="{% static "controlinterface/js/angular/angular.js" %}" type="text/javascript" ></script>
+    <link rel="stylesheet" href="{% static "controlinterface/js/ngToast-master/dist/bootstrap.min.css"%}">
+    <link rel="stylesheet" href="{% static "controlinterface/js/ngToast-master/dist/ngToast.min.css"%}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="{% static "controlinterface/js/angular-route/angular-route.min.js" %}" type="text/javascript" ></script>
+    <script src="{% static "controlinterface/js/gopher.js" %}" type="text/javascript"></script>
     <link rel="stylesheet" href="{% static "controlinterface/css/control.css" %}">
+    <link rel="stylesheet" href="{% static "controlinterface/css/materialize.min.css" %}">
   </head>
 
 
-  <body>
-    <div class="container-fluid">
+  <body ng-app='gopher'class="row grey accent-3 lighten-2">
+    <toast></toast>
+    <div class="container center">
       <div class="row">
+
         {% block content %}{% endblock %}
       </div>
     </div>
+    <script src="{% static "controlinterface/js/angular-sanitize/angular-sanitize.min.js"%}"></script>
+    <script src="{% static "controlinterface/js/angular-animate/angular-animate.min.js" %}" type="text/javascript" ></script>
+    <script src="{% static "controlinterface/js/ngToast-master/dist/ngToast.min.js"%}" type="text/javascript"></script>
+
   </body>
 </html>
