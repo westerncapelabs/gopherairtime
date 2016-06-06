@@ -13,3 +13,10 @@ CELERY_ALWAYS_EAGER = True
 BROKER_BACKEND = 'memory'
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 HOTSOCKET_API_ENDPOINT = 'http://test-hotsocket'
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get(
+            'DATABASE_URL',
+            'postgres://postgres:postgres@localhost/gopherairtime')),
+}

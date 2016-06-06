@@ -2,12 +2,15 @@
 
     <div class='container center'>
       <h2 class='flow-text'> Dashboard</h2>
+
     </div>
 
      <div class='row ' >
       <div class='container center' >
+
           <h5 class='accent-4 chip large white flow-text col m2 s4 btn'> search </h5>
-          <div class='valign-wrapper col m10 s8 white'>
+          &nbsp
+          <div class='valign-wrapper col m8 s4 white'>
               <input type='text' placeholder='search recharge ...' class='center valign' ng-keyup ='search(searchtext);' ng-model='searchtext'>
               <button class='blue darken-3 accent-2 btn valign' ng-show='showReturnButton' ng-click='reloadTable()'>close search</button>
           </div>
@@ -17,7 +20,10 @@
 
     <div class='card row blue accent-1 lighten-4' >
         <table class='striped small bordered' ng-show='fetchStatus;'>
-        <h4 class='flow-text'> Recharges </h4>
+        <h4 class='flow-text col m6 s6'> Recharges
+        <a class='accent-4 btn white black-text ' href='#/newRecharage'> New</a>
+        </h4>
+
           <th>Msisdn</th>
           <th>Amount</th>
           <th>Network</th>
