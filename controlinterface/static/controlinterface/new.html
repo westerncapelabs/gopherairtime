@@ -1,0 +1,34 @@
+<div class='card-panel' >
+
+    <div class='container center'>
+      <h2 class='flow-text'> New Recharge </h2>
+    </div>
+
+     <div class='row ' >
+      <div class='container center' >
+        <a class='blue darken-3 accent-2 btn valign'href='#/'>home </a>
+      </div>
+    </div>
+
+    <div class='card row  accent-1 lighten-4' >
+       <form method='POST'>
+        <label for='msisdn' class=' hide-on-small-only' > Msisdn </label>  <br>
+        <input name='msisdn' type='text' ng-model='msisdn' placeholder='cellphone number' class='valign col s12 m12'>
+        <label for='amount' class=' hide-on-small-only' > Amount </label>  <br>
+        <input name='amount' type='text' ng-model='amount' placeholder='amount' class='valign col s12 m12'>
+
+         <div class="input-field col s12">
+          <select>
+            <option value="" disabled selected>Choose Network</option>
+            <option value="1">MTN</option>
+            <option value="2">Vodacom</option>
+            <option value="3">Cell C</option>
+             <option value="3">Telkom</option>
+          </select>
+          <label>Network</label>
+      </div>
+        <input type='button' type='submit' value='submit' class='btn'>
+
+    </div>
+
+</div>
