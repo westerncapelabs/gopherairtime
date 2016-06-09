@@ -12,7 +12,7 @@
           &nbsp
           <div class='valign-wrapper col m8 s4 white'>
               <input type='text' placeholder='search recharge ...' class='center valign' ng-keyup ='search(searchtext);' ng-model='searchtext'>
-              <button class='blue darken-3 accent-2 btn valign' ng-show='showReturnButton' ng-click='reloadTable()'>close search</button>
+              <button class='blue darken-3 accent-2 btn valign' ng-show='showReturnButton' ng-click='reloadTable();refresh();'>close search</button>
           </div>
 
       </div>
@@ -34,7 +34,7 @@
             <td> {{recharge.amount}}</td>
             <td> {{recharge.network_code}}</td>
             <td>
-                <small class='col s12 m2 btn blue-text white lighten-2 accent-1 small' ng-click='resubmit(recharge)'><i class="material-icons">replay</i></small>
+                <small class='col s12 m2 btn blue-text white lighten-2 accent-1 small' ng-click='resubmit(recharge);refresh();'><i class="material-icons">replay</i></small>
                 <small class='col s12 m2 red-text white btn small' ng-click='delete(recharge)'><i class="material-icons">delete</i> </small>
             </td>
           </tr>

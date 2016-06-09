@@ -6,28 +6,34 @@
 
      <div class='row ' >
       <div class='container center' >
-        <a class='blue darken-3 accent-2 btn valign'href='#/'>home </a>
+        <a class='blue darken-3 accent-2 btn valign col s12 m12'href='#/'>home </a>
       </div>
     </div>
 
     <div class='card row  accent-1 lighten-4' >
-       <form method='POST'>
-        <label for='msisdn' class=' hide-on-small-only' > Msisdn </label>  <br>
-        <input name='msisdn' type='text' ng-model='msisdn' placeholder='cellphone number' class='valign col s12 m12'>
-        <label for='amount' class=' hide-on-small-only' > Amount </label>  <br>
-        <input name='amount' type='text' ng-model='amount' placeholder='amount' class='valign col s12 m12'>
 
-         <div class="input-field col s12">
-          <select>
-            <option value="" disabled selected>Choose Network</option>
-            <option value="1">MTN</option>
-            <option value="2">Vodacom</option>
-            <option value="3">Cell C</option>
-             <option value="3">Telkom</option>
-          </select>
-          <label>Network</label>
-      </div>
-        <input type='button' type='submit' value='submit' class='btn'>
+        <label for='msisdn' class=' hide-on-small-only' > Msisdn </label>  <br>
+        <input name='msisdn' type='text' ng-model='msisdn' placeholder='cellphone number' class='center valign col s12 m12'>
+        <label for='amount' class=' hide-on-small-only' > Amount </label>  <br>
+        <input name='amount' type='text' ng-model='amount' placeholder='amount' class=' center valign col s12 m12'>
+
+        <div class="input-field row ">
+          <span class='flow-text'> Select Network </span>
+          <br>
+          <input type='radio' name='networks' id='1' ng-bind='network'>
+          <label for='1'> MTN </label>
+          <input type='radio' name='networks' id='2' ng-bind='network'>
+          <label for='2'> Vodacom </label>
+          <input type='radio' name='networks' id='3' ng-bind='network'>
+          <label for='3'> Cell C </label>
+          <input type='radio' name='networks' id='4' ng-bind='network'>
+          <label for='4'> Telkom </label>
+       </div>
+
+       <input class='btn row' type='submit' value="submit">
+
+
+
 
     </div>
 

@@ -1,0 +1,59 @@
+{% extends "controlinterface/base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+
+{% verbatim %}
+
+<div  id='p' class='white lighten-4 card-panel'>
+
+    <h3>{{greeting}}</h3>
+    <br>
+
+    <label for='searchbox'><b> Search</b></label>
+    <input name='searchbox' type='text' placeholder='find recharge' ng-model='searchtext' ng-keyup='search(searchtext)' >
+
+
+    <br>
+    <button ng-click='newRecharge=!newRecharge;' ng-show='!newRecharge' class='btn large blue '> new </button>
+    <div ng-show='newRecharge' class='center  accent-1 lighten-4'>
+        <span class='chip red lighten-3' ng-show='error'>{{error}}</span><br>
+        <label for='msisdn'> msisdn </label>
+        <input type='text' ng-model='new_msisdn' name='msisdn'></input>
+        <label for='amount'> amount </label>
+        <input type='text' ng-model='new_amount' name='amount' ></input>
+        <label for='network'> Network </label>
+         <select name='network' ng-model='new_network' >
+            <option value='MTN'>MTN</option>
+            <option value='VOD'>Vodacom</option>
+            <option value='TELKOM'>Telkom</option>
+            <option value='CELLC'>Cell C</option>
+        </select>
+        <br>
+        <button class='btn large orange' ng-click='submitNew();'>Done</button>
+    </div>
+    <hr>
+
+    <br>
+    <table>
+        <tr>
+           <b> <thead>
+                <td> msisdn </td>
+                <td> amount </td>
+                <td> network </td>
+            </thead> </b>
+        </tr>
+        <tr ng-repeat="recharge in recharges">
+            <td>{{recharge.msisdn}}</td>
+            <td>{{recharge.amount}}</td>
+            <td>{{recharge.network_code}}</td>
+            <td><button ng-click="deleteRecharge(recharge)" class='btn red'>delete</button></td>
+            <td><button ng-click="resubmitRecharge(recharge)" class='btn blue'>resubmit</button></td>
+        </tr>
+    </table>
+
+</div>
+
+{% endverbatim %}
+
+{% endblock %}

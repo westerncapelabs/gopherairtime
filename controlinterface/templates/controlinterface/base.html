@@ -1,6 +1,7 @@
 {% load staticfiles %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app='gopherCoffee'>
+
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -15,15 +16,16 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="{% static "controlinterface/js/angular-route/angular-route.min.js" %}" type="text/javascript" ></script>
     <script src="{% static "controlinterface/js/gopher.js" %}" type="text/javascript"></script>
-    <link rel="stylesheet" href="{% static "controlinterface/css/control.css" %}">
+    <script src="{% static "controlinterface/coffee/app.js" %}" type="text/javascript"></script>
     <link rel="stylesheet" href="{% static "controlinterface/css/materialize.min.css" %}">
+    <link rel="stylesheet" href="{% static "controlinterface/css/control.css" %}">
   </head>
 
 
-  <body ng-app='gopher'class="row grey accent-3 lighten-2">
+  <body ng-controller='gopherControl' class="row grey accent-3 lighten-2">
     <toast></toast>
     <div class="container center">
-      <div class="row">
+      <div class="row" ng-init='fetchRecharges();'>
 
         {% block content %}{% endblock %}
       </div>

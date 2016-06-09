@@ -15,7 +15,7 @@
        app.controller('dataService',['$scope', '$http', '$location', '$timeout', 'ngToast', function($scope,$http,$location,$timeout,ngToast){
 
                     $scope.recharges = {};
-                    $scope.fetchStatus;
+                    $scope.fetchStatus=false;
                     $scope.showReturnButton=false;
                     ngToast.create('Gopherairtime.')
 
@@ -43,7 +43,7 @@
                                headers : { "Authorization" : 'Token bd2b2e23762b43b8f86ed4e4d1137d87000a5fc4' }
                         })
                         .success( function(data) {
-                             $scope.reloadTable();
+                             $scope.fetchStatus=false;
                              ngToast.create({
                               className: 'success',
                               content: "<p class='flow-text'>Success !</p>"
@@ -75,7 +75,7 @@
                                headers : { "Authorization" : 'Token bd2b2e23762b43b8f86ed4e4d1137d87000a5fc4' }
                         })
                         .success(function(data){
-                           $scope.reloadTable();
+                            $scope.fetchStatus=false;
                            ngToast.create({
                             className: 'success',
                             content: "<p class='flow-text'>Success !</p>"
@@ -95,7 +95,7 @@
                       $scope.searchResults=[];
                       if($scope.fetchStatus){
                           if($scope.searchtext==''){
-                              $scope.reloadTable();
+                              $scope.refresh();
                           }
                           $scope.recharges.forEach(function(recharge){
                             var contains;
@@ -133,7 +133,7 @@
                     }
 
                     //reload dom recharge table
-                    $scope.reloadTable = function(){
+                    $scope.refresh = function(){
                       $scope.fetchRecharges();
                       $scope.showReturnButton=false;
 
